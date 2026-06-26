@@ -1,0 +1,22 @@
+{
+  "name": "bd-vat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VAT management system for Bangladesh (NBR / Mushak regime) — multi-tenant SME self-filing.",
+  "workspaces": [
+    "packages/*",
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "db:up": "docker compose -f infra/docker-compose.yml up -d",
+    "db:down": "docker compose -f infra/docker-compose.yml down",
+    "dev:api": "npm run dev -w @bd-vat/api",
+    "dev:web": "npm start -w web",
+    "build": "npm run build -w @bd-vat/shared && npm run build -w @bd-vat/vat-engine && npm run build -w @bd-vat/api",
+    "test": "npm run test -w @bd-vat/vat-engine"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

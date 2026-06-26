@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bd-vat-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bdvat
+      POSTGRES_PASSWORD: bdvat
+      POSTGRES_DB: bdvat
+    ports:
+      - "5439:5432"
+    volumes:
+      - bd_vat_pgdata:/var/lib/postgresql/data
+
+volumes:
+  bd_vat_pgdata:

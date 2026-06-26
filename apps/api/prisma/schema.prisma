@@ -1,0 +1,208 @@
+// Bangladesh VAT management — data model (NBR / SD&VAT Act 2012, Mushak regime).
+// Multi-tenant: one Tenant == one VAT-registered company (one BIN).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ACCOUNTANT
+  VIEWER
+}
+
+enum PartyType {
+  CUSTOMER
+  SUPPLIER
+  BOTH
+}
+
+enum TransactionKind {
+  SALE
+  PURCHASE
+}
+
+enum TransactionStatus {
+  DRAFT
+  ISSUED
+  CANCELLED
+}
+
+enum AdjustmentKind {
+  INCREASING // debit note — increases net payable
+  DECREASING // credit note — decreases net payable
+}
+
+enum ReturnStatus {
+  DRAFT
+  FINALISED
+  SUBMITTED
+}
+
+model Tenant {
+  id                String   @id @default(cuid())
+  name              String
+  bin               String   @unique // 13-digit Business Identification Number
+  tin               String? // 12-digit e-TIN
+  // NBR jurisdiction
+  commissionerate   String?
+  division          String?
+  circle            String?
+  economicActivity  String? // primary economic activity / sector code
+  address           String?
+  createdAt         DateTime @default(now())
+
+  users        User[]
+  parties      Party[]
+  products     Product[]
+  transactions Transaction[]
+  adjustments  Adjustment[]
+  returns      VatReturn[]
+  vdsCerts     VdsCertificate[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(OWNER)
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model Party {
+  id        String    @id @default(cuid())
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  type      PartyType @default(CUSTOMER)
+  bin       String? // counterparty BIN (required for B2B input rebate)
+  address   String?
+  createdAt DateTime  @default(now())
+
+  transactions Transaction[]
+
+  @@index([tenantId])
+}
+
+model Product {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name      String
+  unit      String? // pcs, kg, hour...
+  hsCode    String? // HS code where applicable
+  vatRate   Decimal  @default(0.15) @db.Decimal(5, 4)
+  sdRate    Decimal  @default(0) @db.Decimal(5, 4)
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+}
+
+model Transaction {
+  id        String            @id @default(cuid())
+  tenantId  String
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kind      TransactionKind
+  status    TransactionStatus @default(DRAFT)
+  partyId   String?
+  party     Party?            @relation(fields: [partyId], references: [id])
+  // Mushak 6.3 invoice number for SALEs; supplier's invoice ref for PURCHASEs
+  mushakNo  String?
+  issuedAt  DateTime
+  // Eligible for input-VAT rebate (PURCHASE only, when conditions are met)
+  rebateEligible Boolean      @default(false)
+
+  netTotal  Decimal @default(0) @db.Decimal(18, 2)
+  sdTotal   Decimal @default(0) @db.Decimal(18, 2)
+  vatTotal  Decimal @default(0) @db.Decimal(18, 2)
+  grandTotal Decimal @default(0) @db.Decimal(18, 2)
+
+  lines     TransactionLine[]
+  vdsCerts  VdsCertificate[]
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, kind, issuedAt])
+}
+
+model TransactionLine {
+  id            String      @id @default(cuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  description   String
+  quantity      Decimal     @db.Decimal(18, 4)
+  unitPrice     Decimal     @db.Decimal(18, 4)
+  vatRate       Decimal     @db.Decimal(5, 4)
+  sdRate        Decimal     @default(0) @db.Decimal(5, 4)
+  netValue      Decimal     @db.Decimal(18, 2)
+  sdAmount      Decimal     @db.Decimal(18, 2)
+  vatAmount     Decimal     @db.Decimal(18, 2)
+  lineTotal     Decimal     @db.Decimal(18, 2)
+
+  @@index([transactionId])
+}
+
+// Mushak 6.6 — VAT Deducted at Source certificate.
+model VdsCertificate {
+  id            String       @id @default(cuid())
+  tenantId      String
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  certificateNo String
+  // true  => VAT withheld on OUR sales by a withholding entity (reduces our payable)
+  // false => VAT WE withheld on a purchase (we deposit to treasury)
+  withheldOnOurSales Boolean
+  amount        Decimal      @db.Decimal(18, 2)
+  issuedAt      DateTime
+
+  @@index([tenantId])
+}
+
+// Mushak 6.7 (credit) / 6.8 (debit) and other increasing/decreasing adjustments.
+model Adjustment {
+  id        String         @id @default(cuid())
+  tenantId  String
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  kind      AdjustmentKind
+  reason    String?
+  amount    Decimal        @db.Decimal(18, 2) // VAT amount adjusted
+  issuedAt  DateTime
+
+  @@index([tenantId, issuedAt])
+}
+
+// Mushak 9.1 — monthly VAT return for one tax period.
+model VatReturn {
+  id         String       @id @default(cuid())
+  tenantId   String
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  year       Int
+  month      Int // 1-12
+  status     ReturnStatus @default(DRAFT)
+
+  outputVat            Decimal @default(0) @db.Decimal(18, 2)
+  outputSd             Decimal @default(0) @db.Decimal(18, 2)
+  inputVatRebate       Decimal @default(0) @db.Decimal(18, 2)
+  vdsWithheldOnSales   Decimal @default(0) @db.Decimal(18, 2)
+  increasingAdjustment Decimal @default(0) @db.Decimal(18, 2)
+  decreasingAdjustment Decimal @default(0) @db.Decimal(18, 2)
+  openingRebateBalance Decimal @default(0) @db.Decimal(18, 2)
+  treasuryDeposits     Decimal @default(0) @db.Decimal(18, 2)
+  netPayable           Decimal @default(0) @db.Decimal(18, 2)
+  carryForward         Decimal @default(0) @db.Decimal(18, 2)
+
+  submittedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([tenantId, year, month])
+}

@@ -1,0 +1,56 @@
+<section class="dash">
+  <header class="dash__head">
+    <h1>VAT Dashboard</h1>
+    <span class="status"
+          [class.status--ok]="apiOnline() === true"
+          [class.status--down]="apiOnline() === false">
+      {{ apiOnline() === null ? 'Checking API…' : apiOnline() ? 'API online' : 'API offline' }}
+    </span>
+  </header>
+
+  @if (error()) {
+    <p class="hint">{{ error() }}</p>
+  }
+
+  <div class="cards">
+    <article class="card">
+      <p class="card__label">Standard VAT rate</p>
+      <p class="card__value">15%</p>
+      <p class="card__sub">+ truncated rates 1.5–10%</p>
+    </article>
+    <article class="card">
+      <p class="card__label">Return due</p>
+      <p class="card__value">15th</p>
+      <p class="card__sub">Mushak 9.1, each month</p>
+    </article>
+    <article class="card">
+      <p class="card__label">Compiled returns</p>
+      <p class="card__value">{{ returns().length }}</p>
+      <p class="card__sub">periods on record</p>
+    </article>
+  </div>
+
+  <h2>Monthly returns (Mushak 9.1)</h2>
+  @if (returns().length) {
+    <table class="returns">
+      <thead>
+        <tr><th>Period</th><th>Output VAT</th><th>Input rebate</th><th>Net payable</th><th>Carry fwd</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        @for (r of returns(); track r.id) {
+          <tr>
+            <td>{{ r.year }}-{{ r.month }}</td>
+            <td>৳ {{ r.outputVat }}</td>
+            <td>৳ {{ r.inputVatRebate }}</td>
+            <td class="strong">৳ {{ r.netPayable }}</td>
+            <td>৳ {{ r.carryForward }}</td>
+            <td>{{ r.status }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="hint">No returns compiled yet. Seed the DB and compile a period via
+      <code>POST /api/returns/compile</code>.</p>
+  }
+</section>

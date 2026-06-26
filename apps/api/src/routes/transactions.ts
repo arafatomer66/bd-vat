@@ -1,0 +1,77 @@
+import { Router } from "express";
+import { z } from "zod";
+import { computeInvoice, type InvoiceLineInput } from "@bd-vat/vat-engine";
+import { prisma } from "../prisma.js";
+import { requireTenant } from "../middleware/tenant.js";
+
+export const transactionsRouter = Router();
+transactionsRouter.use(requireTenant);
+
+const lineSchema = z.object({
+  description: z.string().min(1),
+  quantity: z.number().positive(),
+  unitPrice: z.number().nonnegative(),
+  vatRate: z.number().min(0).max(1),
+  sdRate: z.number().min(0).max(1).optional(),
+});
+
+const createTxnSchema = z.object({
+  kind: z.enum(["SALE", "PURCHASE"]),
+  partyId: z.string().optional(),
+  mushakNo: z.string().optional(),
+  issuedAt: z.coerce.date(),
+  rebateEligible: z.boolean().optional(),
+  lines: z.array(lineSchema).min(1),
+});
+
+// Create a SALE (Mushak 6.3) or PURCHASE; totals computed by the VAT engine.
+transactionsRouter.post("/", async (req, res) => {
+  const parsed = createTxnSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  const { lines, ...header } = parsed.data;
+  const totals = computeInvoice(lines as InvoiceLineInput[]);
+
+  const txn = await prisma.transaction.create({
+    data: {
+      tenantId: req.tenantId!,
+      kind: header.kind,
+      partyId: header.partyId,
+      mushakNo: header.mushakNo,
+      issuedAt: header.issuedAt,
+      rebateEligible: header.rebateEligible ?? header.kind === "PURCHASE",
+      status: "ISSUED",
+      netTotal: totals.netTotal,
+      sdTotal: totals.sdTotal,
+      vatTotal: totals.vatTotal,
+      grandTotal: totals.grandTotal,
+      lines: {
+        create: totals.lines.map((l, i) => ({
+          description: l.description,
+          quantity: lines[i]!.quantity,
+          unitPrice: lines[i]!.unitPrice,
+          vatRate: lines[i]!.vatRate,
+          sdRate: lines[i]!.sdRate ?? 0,
+          netValue: l.netValue,
+          sdAmount: l.sdAmount,
+          vatAmount: l.vatAmount,
+          lineTotal: l.lineTotal,
+        })),
+      },
+    },
+    include: { lines: true },
+  });
+
+  res.status(201).json(txn);
+});
+
+transactionsRouter.get("/", async (req, res) => {
+  const kind = req.query.kind as "SALE" | "PURCHASE" | undefined;
+  const txns = await prisma.transaction.findMany({
+    where: { tenantId: req.tenantId!, ...(kind ? { kind } : {}) },
+    orderBy: { issuedAt: "desc" },
+    include: { lines: true, party: true },
+  });
+  res.json(txns);
+});

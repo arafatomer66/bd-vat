@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f7f7f9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #18181b;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: .9rem 1.5rem;
+  background: #0f5132;
+  color: #fff;
+
+  .brand {
+    font-size: 1.25rem;
+    letter-spacing: -.5px;
+    strong { color: #c6f6d5; }
+  }
+  .tag {
+    font-size: .8rem;
+    opacity: .85;
+  }
+}
