@@ -23,4 +23,19 @@
     font-size: .8rem;
     opacity: .85;
   }
+
+  nav {
+    margin-left: auto;
+    display: flex;
+    gap: .25rem;
+    a {
+      color: #c6f6d5;
+      text-decoration: none;
+      font-size: .9rem;
+      padding: .35rem .8rem;
+      border-radius: 7px;
+      &.active { background: rgba(255, 255, 255, .15); color: #fff; }
+      &:hover { background: rgba(255, 255, 255, .1); }
+    }
+  }
 }

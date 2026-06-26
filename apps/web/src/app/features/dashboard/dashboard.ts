@@ -22,6 +22,7 @@ export class Dashboard {
     try {
       await this.api.health();
       this.apiOnline.set(true);
+      await this.api.ensureTenant();
       this.returns.set(await this.api.listReturns());
       this.error.set(null);
     } catch {

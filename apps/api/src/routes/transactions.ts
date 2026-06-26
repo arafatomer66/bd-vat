@@ -3,6 +3,7 @@ import { z } from "zod";
 import { computeInvoice, type InvoiceLineInput } from "@bd-vat/vat-engine";
 import { prisma } from "../prisma.js";
 import { requireTenant } from "../middleware/tenant.js";
+import { renderMushak63 } from "../mushak/mushak63.js";
 
 export const transactionsRouter = Router();
 transactionsRouter.use(requireTenant);
@@ -74,4 +75,58 @@ transactionsRouter.get("/", async (req, res) => {
     include: { lines: true, party: true },
   });
   res.json(txns);
+});
+
+transactionsRouter.get("/:id", async (req, res) => {
+  const txn = await prisma.transaction.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+    include: { lines: true, party: true },
+  });
+  if (!txn) return res.status(404).json({ error: "Not found" });
+  res.json(txn);
+});
+
+// Mushak 6.3 tax invoice as a downloadable PDF (SALES only).
+transactionsRouter.get("/:id/mushak-6.3", async (req, res) => {
+  const [txn, tenant] = await Promise.all([
+    prisma.transaction.findFirst({
+      where: { id: req.params.id, tenantId: req.tenantId! },
+      include: { lines: true, party: true },
+    }),
+    prisma.tenant.findUnique({ where: { id: req.tenantId! } }),
+  ]);
+  if (!txn || !tenant) return res.status(404).json({ error: "Not found" });
+  if (txn.kind !== "SALE") {
+    return res.status(400).json({ error: "Mushak 6.3 applies to SALES transactions only" });
+  }
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `inline; filename="mushak-6.3-${txn.mushakNo ?? txn.id}.pdf"`
+  );
+
+  renderMushak63(
+    {
+      invoiceNo: txn.mushakNo ?? txn.id,
+      issuedAt: txn.issuedAt,
+      seller: { name: tenant.name, bin: tenant.bin, address: tenant.address },
+      buyer: { name: txn.party?.name, bin: txn.party?.bin, address: txn.party?.address },
+      lines: txn.lines.map((l) => ({
+        description: l.description,
+        quantity: l.quantity.toString(),
+        unitPrice: l.unitPrice.toString(),
+        vatRate: l.vatRate.toString(),
+        netValue: l.netValue.toString(),
+        sdAmount: l.sdAmount.toString(),
+        vatAmount: l.vatAmount.toString(),
+        lineTotal: l.lineTotal.toString(),
+      })),
+      netTotal: txn.netTotal.toString(),
+      sdTotal: txn.sdTotal.toString(),
+      vatTotal: txn.vatTotal.toString(),
+      grandTotal: txn.grandTotal.toString(),
+    },
+    res
+  );
 });

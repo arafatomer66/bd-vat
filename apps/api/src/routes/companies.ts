@@ -30,6 +30,12 @@ companiesRouter.post("/", async (req, res) => {
   res.status(201).json(tenant);
 });
 
+// List companies (tenant picker for the workspace; replaced by auth-scoped context later).
+companiesRouter.get("/", async (_req, res) => {
+  const tenants = await prisma.tenant.findMany({ orderBy: { createdAt: "asc" } });
+  res.json(tenants);
+});
+
 companiesRouter.get("/:id", async (req, res) => {
   const tenant = await prisma.tenant.findUnique({ where: { id: req.params.id } });
   if (!tenant) return res.status(404).json({ error: "Not found" });

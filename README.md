@@ -49,11 +49,12 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 
 ### Transactions & invoicing
 - ✅ Record **SALES** (output VAT) and **PURCHASES** (input VAT) with line items
+- ✅ Transaction-entry UI — dynamic line items with **live VAT/SD preview**
 - ✅ Automatic VAT/SD computation on every transaction via the engine
 - ✅ Rebate-eligibility flag on purchases
 - ✅ List & filter transactions by type
-- 🟡 **Mushak 6.3** tax invoice (chalan) — data model ready, PDF generation pending
-- ⬜ Mushak 6.3 PDF export & print
+- ✅ Customers/suppliers with quick-add party + counterparty BIN
+- ✅ **Mushak 6.3** tax invoice (chalan) — generated as a downloadable **PDF**
 - ⬜ Mushak 6.7 (credit note) / 6.8 (debit note) issuance UI
 - ⬜ Mushak 6.6 (VDS certificate) issuance & tracking UI
 - ⬜ Invoice numbering sequences per company
@@ -70,6 +71,7 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 
 ### Dashboard & reporting
 - ✅ Dashboard shell with API health, rate/deadline summary cards, compiled-returns table
+- ✅ Transactions workspace (entry form + recent-transactions list + per-invoice PDF)
 - ⬜ Net-payable & filing-deadline alerts (return due by the **15th** of the following month)
 - ⬜ Output vs input VAT trends, period comparisons
 - ⬜ VDS receivable/payable summary
@@ -107,17 +109,22 @@ Tenant scope is provided via the `x-tenant-id` header (JWT auth lands in Phase 1
 
 | Method | Path                         | Purpose                                  |
 |--------|------------------------------|------------------------------------------|
-| GET    | `/health`                    | Service health                           |
-| POST   | `/api/companies`             | Onboard a company (BIN-validated)        |
-| GET    | `/api/companies/:id`         | Get a company                            |
-| POST   | `/api/transactions`          | Create a SALE (Mushak 6.3) or PURCHASE   |
-| GET    | `/api/transactions?kind=`    | List transactions                        |
-| POST   | `/api/returns/compile`       | Compile Mushak 9.1 for `{year, month}`   |
-| GET    | `/api/returns`               | List compiled returns                    |
+| GET    | `/health`                          | Service health                           |
+| POST   | `/api/companies`                   | Onboard a company (BIN-validated)        |
+| GET    | `/api/companies`                   | List companies                           |
+| GET    | `/api/companies/:id`               | Get a company                            |
+| GET    | `/api/parties`                     | List customers/suppliers                 |
+| POST   | `/api/parties`                     | Create a party                           |
+| POST   | `/api/transactions`                | Create a SALE (Mushak 6.3) or PURCHASE   |
+| GET    | `/api/transactions?kind=`          | List transactions                        |
+| GET    | `/api/transactions/:id`            | Get one transaction                      |
+| GET    | `/api/transactions/:id/mushak-6.3` | Download the Mushak 6.3 tax-invoice PDF  |
+| POST   | `/api/returns/compile`             | Compile Mushak 9.1 for `{year, month}`   |
+| GET    | `/api/returns`                     | List compiled returns                    |
 
 ## Roadmap
 1. **Foundation** ✅ monorepo, Prisma model, vat-engine, API skeleton, Angular shell
-2. Transactions UI + Mushak 6.3 PDF invoice
+2. **Transactions UI + Mushak 6.3 PDF invoice** ✅
 3. Full `vat-engine` wiring (VDS, SD, adjustments end-to-end) — *core trust layer*
 4. Mushak 9.1 return + 6.1/6.2 registers + dashboard (payable, deadlines)
 5. `NbrAdapter` — submission-ready package + portal automation hook

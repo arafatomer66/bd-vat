@@ -1,0 +1,102 @@
+<section class="txn">
+  <h1>Transactions</h1>
+  @if (error()) { <p class="hint error">{{ error() }}</p> }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="card">
+    <div class="row">
+      <label>
+        Type
+        <select formControlName="kind">
+          <option value="SALE">Sale (output VAT · Mushak 6.3)</option>
+          <option value="PURCHASE">Purchase (input VAT)</option>
+        </select>
+      </label>
+      <label>
+        Date
+        <input type="date" formControlName="issuedAt" />
+      </label>
+      <label>
+        Invoice / Mushak no.
+        <input type="text" formControlName="mushakNo" placeholder="6.3-0001" />
+      </label>
+      <label>
+        Party
+        <select formControlName="partyId">
+          <option value="">— none —</option>
+          @for (p of parties(); track p.id) {
+            <option [value]="p.id">{{ p.name }}{{ p.bin ? ' · ' + p.bin : '' }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="quick-party" [formGroup]="newParty">
+      <input type="text" formControlName="name" placeholder="Quick add party name" />
+      <input type="text" formControlName="bin" placeholder="BIN (13 digits, optional)" />
+      <button type="button" class="ghost" (click)="addParty()">+ Add party</button>
+    </div>
+
+    <table class="lines">
+      <thead>
+        <tr>
+          <th>Description</th><th>Qty</th><th>Unit price</th><th>VAT rate</th><th>SD %</th>
+          <th class="num">VAT</th><th class="num">Total</th><th></th>
+        </tr>
+      </thead>
+      <tbody formArrayName="lines">
+        @for (line of lines.controls; track $index) {
+          <tr [formGroupName]="$index">
+            <td><input type="text" formControlName="description" placeholder="Goods / service" /></td>
+            <td><input type="number" formControlName="quantity" step="0.01" class="sm" /></td>
+            <td><input type="number" formControlName="unitPrice" step="0.01" class="sm" /></td>
+            <td>
+              <select formControlName="vatRate">
+                @for (r of vatRates; track r.value) { <option [value]="r.value">{{ r.label }}</option> }
+              </select>
+            </td>
+            <td><input type="number" formControlName="sdRate" step="0.01" class="xs" /></td>
+            <td class="num">৳ {{ lineVat($index) | number:'1.2-2' }}</td>
+            <td class="num">৳ {{ lineTotal($index) | number:'1.2-2' }}</td>
+            <td><button type="button" class="x" (click)="removeLine($index)">✕</button></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <button type="button" class="ghost" (click)="addLine()">+ Add line</button>
+
+    <div class="totals">
+      <span>Net <strong>৳ {{ previewNet | number:'1.2-2' }}</strong></span>
+      <span>VAT <strong>৳ {{ previewVat | number:'1.2-2' }}</strong></span>
+      <span class="grand">Total <strong>৳ {{ previewGrand | number:'1.2-2' }}</strong></span>
+      <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save transaction' }}</button>
+    </div>
+  </form>
+
+  <h2>Recent transactions</h2>
+  @if (transactions().length) {
+    <table class="list">
+      <thead>
+        <tr><th>Date</th><th>Type</th><th>No.</th><th>Party</th><th class="num">VAT</th><th class="num">Total</th><th></th></tr>
+      </thead>
+      <tbody>
+        @for (t of transactions(); track t.id) {
+          <tr>
+            <td>{{ t.issuedAt | date:'yyyy-MM-dd' }}</td>
+            <td><span class="badge" [class.sale]="t.kind === 'SALE'">{{ t.kind }}</span></td>
+            <td>{{ t.mushakNo || '—' }}</td>
+            <td>{{ t.party?.name || '—' }}</td>
+            <td class="num">৳ {{ t.vatTotal }}</td>
+            <td class="num">৳ {{ t.grandTotal }}</td>
+            <td>
+              @if (t.kind === 'SALE') {
+                <button class="ghost sm" (click)="downloadPdf(t)">Mushak 6.3 PDF</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="hint">No transactions yet — add one above.</p>
+  }
+</section>
