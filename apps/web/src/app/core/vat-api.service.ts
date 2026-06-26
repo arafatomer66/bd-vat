@@ -43,6 +43,25 @@ export interface Transaction {
   lines: (TxnLine & { netValue: string; vatAmount: string; lineTotal: string })[];
 }
 
+export interface VdsCertificate {
+  id: string;
+  certificateNo: string;
+  withheldOnOurSales: boolean;
+  amount: string;
+  issuedAt: string;
+}
+
+export interface Adjustment {
+  id: string;
+  kind: 'INCREASING' | 'DECREASING';
+  form?: string;
+  refNo?: string;
+  reason?: string;
+  amount: string;
+  issuedAt: string;
+  party?: Party;
+}
+
 export interface VatReturn {
   id: string;
   year: number;
@@ -128,6 +147,41 @@ export class VatApiService {
     );
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
+  }
+
+  listVds() {
+    return firstValueFrom(
+      this.http.get<VdsCertificate[]>(`${API_BASE}/api/vds`, { headers: this.headers() })
+    );
+  }
+
+  createVds(body: {
+    certificateNo: string;
+    withheldOnOurSales: boolean;
+    amount: number;
+    issuedAt: string;
+  }) {
+    return firstValueFrom(
+      this.http.post<VdsCertificate>(`${API_BASE}/api/vds`, body, { headers: this.headers() })
+    );
+  }
+
+  listAdjustments() {
+    return firstValueFrom(
+      this.http.get<Adjustment[]>(`${API_BASE}/api/adjustments`, { headers: this.headers() })
+    );
+  }
+
+  createAdjustment(body: {
+    kind: 'INCREASING' | 'DECREASING';
+    refNo?: string;
+    reason?: string;
+    amount: number;
+    issuedAt: string;
+  }) {
+    return firstValueFrom(
+      this.http.post<Adjustment>(`${API_BASE}/api/adjustments`, body, { headers: this.headers() })
+    );
   }
 
   listReturns() {

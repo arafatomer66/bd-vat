@@ -1,0 +1,74 @@
+<section class="adj">
+  <h1>VDS &amp; Adjustments</h1>
+  @if (error()) { <p class="hint error">{{ error() }}</p> }
+
+  <div class="grid">
+    <!-- VDS -->
+    <div class="card">
+      <h2>VAT Deducted at Source · Mushak 6.6</h2>
+      <form [formGroup]="vdsForm" (ngSubmit)="submitVds()">
+        <label>Certificate no.<input type="text" formControlName="certificateNo" /></label>
+        <label>Direction
+          <select formControlName="withheldOnOurSales">
+            <option value="true">Withheld on our sales (reduces payable)</option>
+            <option value="false">We withheld on a purchase (we deposit)</option>
+          </select>
+        </label>
+        <label>VAT amount<input type="number" step="0.01" formControlName="amount" /></label>
+        <label>Date<input type="date" formControlName="issuedAt" /></label>
+        <button type="submit">Record certificate</button>
+      </form>
+
+      @if (vds().length) {
+        <table>
+          <thead><tr><th>Date</th><th>Cert no.</th><th>Direction</th><th class="num">VAT</th></tr></thead>
+          <tbody>
+            @for (c of vds(); track c.id) {
+              <tr>
+                <td>{{ c.issuedAt | date:'yyyy-MM-dd' }}</td>
+                <td>{{ c.certificateNo }}</td>
+                <td>{{ c.withheldOnOurSales ? 'On our sales' : 'On purchase' }}</td>
+                <td class="num">৳ {{ c.amount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else { <p class="hint">No VDS certificates yet.</p> }
+    </div>
+
+    <!-- Credit / debit notes -->
+    <div class="card">
+      <h2>Credit / Debit notes · Mushak 6.7 / 6.8</h2>
+      <form [formGroup]="noteForm" (ngSubmit)="submitNote()">
+        <label>Type
+          <select formControlName="kind">
+            <option value="DECREASING">Credit note (6.7) — decreases payable</option>
+            <option value="INCREASING">Debit note (6.8) — increases payable</option>
+          </select>
+        </label>
+        <label>Note no.<input type="text" formControlName="refNo" /></label>
+        <label>Reason<input type="text" formControlName="reason" placeholder="e.g. sales return" /></label>
+        <label>VAT amount<input type="number" step="0.01" formControlName="amount" /></label>
+        <label>Date<input type="date" formControlName="issuedAt" /></label>
+        <button type="submit">Issue note</button>
+      </form>
+
+      @if (notes().length) {
+        <table>
+          <thead><tr><th>Date</th><th>Form</th><th>No.</th><th>Reason</th><th class="num">VAT</th></tr></thead>
+          <tbody>
+            @for (n of notes(); track n.id) {
+              <tr>
+                <td>{{ n.issuedAt | date:'yyyy-MM-dd' }}</td>
+                <td><span class="badge" [class.dec]="n.kind === 'DECREASING'">{{ n.form }}</span></td>
+                <td>{{ n.refNo || '—' }}</td>
+                <td>{{ n.reason || '—' }}</td>
+                <td class="num">৳ {{ n.amount }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else { <p class="hint">No notes yet.</p> }
+    </div>
+  </div>
+</section>

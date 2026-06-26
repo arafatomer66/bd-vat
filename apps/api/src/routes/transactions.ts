@@ -34,12 +34,25 @@ transactionsRouter.post("/", async (req, res) => {
   const { lines, ...header } = parsed.data;
   const totals = computeInvoice(lines as InvoiceLineInput[]);
 
+  // Auto-number sales invoices per company per year when no number is supplied:
+  // 6.3-YYYY-NNNN. Purchases keep the supplier's reference.
+  let mushakNo = header.mushakNo;
+  if (!mushakNo && header.kind === "SALE") {
+    const year = header.issuedAt.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+    const count = await prisma.transaction.count({
+      where: { tenantId: req.tenantId!, kind: "SALE", issuedAt: { gte: yearStart, lt: yearEnd } },
+    });
+    mushakNo = `6.3-${year}-${String(count + 1).padStart(4, "0")}`;
+  }
+
   const txn = await prisma.transaction.create({
     data: {
       tenantId: req.tenantId!,
       kind: header.kind,
       partyId: header.partyId,
-      mushakNo: header.mushakNo,
+      mushakNo,
       issuedAt: header.issuedAt,
       rebateEligible: header.rebateEligible ?? header.kind === "PURCHASE",
       status: "ISSUED",

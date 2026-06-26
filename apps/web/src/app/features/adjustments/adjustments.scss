@@ -1,0 +1,75 @@
+:host { display: block; }
+
+.adj {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  h1 { margin: 0 0 1rem; font-size: 1.6rem; }
+  h2 { margin: 0 0 1rem; font-size: 1rem; }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.card {
+  border: 1px solid #e7e7ea;
+  border-radius: 12px;
+  padding: 1.25rem;
+  background: #fff;
+}
+
+form {
+  display: grid;
+  gap: .6rem;
+  margin-bottom: 1.25rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  font-size: .8rem;
+  color: #6b7280;
+}
+
+input, select {
+  padding: .45rem .55rem;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: .9rem;
+}
+
+button {
+  cursor: pointer;
+  font-size: .85rem;
+  border-radius: 8px;
+  padding: .5rem .9rem;
+  border: 1px solid transparent;
+  background: #0f5132;
+  color: #fff;
+  justify-self: start;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+  th, td { padding: .45rem .4rem; border-bottom: 1px solid #eee; text-align: left; }
+  th { color: #6b7280; font-weight: 600; }
+  .num { text-align: right; white-space: nowrap; }
+}
+
+.badge {
+  font-size: .72rem;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  background: #fde2e1;
+  color: #b3261e;
+  &.dec { background: #d8f5e3; color: #0a7a3d; }
+}
+
+.hint { color: #6b7280; font-size: .9rem; }
+.error { color: #b3261e; }
