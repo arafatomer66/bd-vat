@@ -3,6 +3,8 @@ import { z } from "zod";
 import { computeReturn } from "@bd-vat/vat-engine";
 import { prisma } from "../prisma.js";
 import { requireTenant } from "../middleware/tenant.js";
+import { renderMushak91 } from "../mushak/mushak91.js";
+import { salesRegisterCsv, purchaseRegisterCsv } from "../mushak/registers.js";
 
 export const returnsRouter = Router();
 returnsRouter.use(requireTenant);
@@ -93,6 +95,129 @@ returnsRouter.get("/", async (req, res) => {
     orderBy: [{ year: "desc" }, { month: "desc" }],
   });
   res.json(returns);
+});
+
+// Mushak 6.1 / 6.2 register CSV for a period: ?type=6.1|6.2&year=&month=
+returnsRouter.get("/registers", async (req, res) => {
+  const type = req.query.type === "6.1" ? "6.1" : "6.2";
+  const year = Number(req.query.year);
+  const month = Number(req.query.month);
+  if (!year || !month) return res.status(400).json({ error: "year and month required" });
+
+  const range = {
+    gte: new Date(Date.UTC(year, month - 1, 1)),
+    lt: new Date(Date.UTC(year, month, 1)),
+  };
+  const kind = type === "6.2" ? "SALE" : "PURCHASE";
+  const txns = await prisma.transaction.findMany({
+    where: { tenantId: req.tenantId!, kind, status: "ISSUED", issuedAt: range },
+    orderBy: { issuedAt: "asc" },
+    include: { party: true },
+  });
+  const csv = type === "6.2" ? salesRegisterCsv(txns) : purchaseRegisterCsv(txns);
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename="mushak-${type}-${year}-${month}.csv"`);
+  res.send(csv);
+});
+
+returnsRouter.get("/:id", async (req, res) => {
+  const vatReturn = await prisma.vatReturn.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+  });
+  if (!vatReturn) return res.status(404).json({ error: "Not found" });
+  res.json(vatReturn);
+});
+
+// Move a return through DRAFT -> FINALISED -> SUBMITTED.
+const statusSchema = z.object({ status: z.enum(["DRAFT", "FINALISED", "SUBMITTED"]) });
+returnsRouter.patch("/:id/status", async (req, res) => {
+  const parsed = statusSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const existing = await prisma.vatReturn.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+  });
+  if (!existing) return res.status(404).json({ error: "Not found" });
+
+  const updated = await prisma.vatReturn.update({
+    where: { id: existing.id },
+    data: {
+      status: parsed.data.status,
+      submittedAt: parsed.data.status === "SUBMITTED" ? new Date() : existing.submittedAt,
+    },
+  });
+  res.json(updated);
+});
+
+// Record a treasury challan and recompute net payable from stored figures.
+const challanSchema = z.object({
+  challanNo: z.string().min(1),
+  challanDate: z.coerce.date().optional(),
+  treasuryDeposits: z.number().nonnegative(),
+});
+returnsRouter.patch("/:id/challan", async (req, res) => {
+  const parsed = challanSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const r = await prisma.vatReturn.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+  });
+  if (!r) return res.status(404).json({ error: "Not found" });
+
+  const num = (v: unknown) => Number(v ?? 0);
+  const result = computeReturn({
+    outputVat: num(r.outputVat),
+    outputSd: num(r.outputSd),
+    inputVatRebate: num(r.inputVatRebate),
+    vdsWithheldOnSales: num(r.vdsWithheldOnSales),
+    increasingAdjustments: num(r.increasingAdjustment),
+    decreasingAdjustments: num(r.decreasingAdjustment),
+    openingRebateBalance: num(r.openingRebateBalance),
+    treasuryDeposits: parsed.data.treasuryDeposits,
+  });
+
+  const updated = await prisma.vatReturn.update({
+    where: { id: r.id },
+    data: {
+      challanNo: parsed.data.challanNo,
+      challanDate: parsed.data.challanDate,
+      treasuryDeposits: parsed.data.treasuryDeposits,
+      netPayable: result.netPayable,
+      carryForward: result.carryForward,
+    },
+  });
+  res.json({ return: updated, computed: result });
+});
+
+// Mushak 9.1 return as a PDF.
+returnsRouter.get("/:id/mushak-9.1", async (req, res) => {
+  const r = await prisma.vatReturn.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+  });
+  if (!r) return res.status(404).json({ error: "Not found" });
+  const tenant = await prisma.tenant.findUnique({ where: { id: req.tenantId! } });
+  if (!tenant) return res.status(404).json({ error: "Not found" });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename="mushak-9.1-${r.year}-${r.month}.pdf"`);
+  renderMushak91(
+    {
+      year: r.year,
+      month: r.month,
+      status: r.status,
+      seller: { name: tenant.name, bin: tenant.bin, address: tenant.address },
+      outputVat: r.outputVat.toString(),
+      outputSd: r.outputSd.toString(),
+      inputVatRebate: r.inputVatRebate.toString(),
+      vdsWithheldOnSales: r.vdsWithheldOnSales.toString(),
+      increasingAdjustment: r.increasingAdjustment.toString(),
+      decreasingAdjustment: r.decreasingAdjustment.toString(),
+      openingRebateBalance: r.openingRebateBalance.toString(),
+      treasuryDeposits: r.treasuryDeposits.toString(),
+      netPayable: r.netPayable.toString(),
+      carryForward: r.carryForward.toString(),
+      challanNo: r.challanNo,
+    },
+    res
+  );
 });
 
 function priorPeriod(tenantId: string, year: number, month: number) {

@@ -1,0 +1,96 @@
+:host { display: block; }
+
+.ret {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  h1 { margin: 0 0 1rem; font-size: 1.6rem; }
+  h2 { margin: 0 0 .75rem; font-size: 1.05rem; }
+  h3 { margin: 0 0 .5rem; font-size: .9rem; }
+}
+
+.card {
+  border: 1px solid #e7e7ea;
+  border-radius: 12px;
+  padding: 1.1rem;
+  background: #fff;
+}
+
+.compile {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: 1.25rem;
+  font-size: .9rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.25rem;
+}
+
+.list ul { list-style: none; margin: 0; padding: 0; }
+.list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .25rem .5rem;
+  padding: .55rem .6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .85rem;
+  &:hover { background: #f3f4f6; }
+  &.active { background: #eaf5ee; }
+  .pay { grid-column: 1 / -1; color: #6b7280; font-size: .8rem; }
+}
+
+.figures {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  margin-bottom: 1rem;
+  td { padding: .35rem .2rem; border-bottom: 1px solid #f0f0f0; }
+  .num { text-align: right; white-space: nowrap; }
+  .total td { font-weight: 700; border-top: 2px solid #ddd; border-bottom: none; font-size: 1rem; }
+}
+
+.actions, .workflow, .challan { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.workflow { margin: 1rem 0; font-size: .85rem; }
+.challan { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eee; }
+.challan h3 { width: 100%; }
+
+input {
+  padding: .4rem .5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: .9rem;
+  &.sm { width: 56px; }
+  &.md { width: 84px; }
+}
+
+button {
+  cursor: pointer;
+  font-size: .82rem;
+  border-radius: 8px;
+  padding: .45rem .8rem;
+  border: 1px solid transparent;
+  background: #0f5132;
+  color: #fff;
+  &:disabled { opacity: .5; cursor: default; }
+  &.ghost { background: #fff; color: #0f5132; border-color: #0f5132; }
+}
+
+.badge {
+  font-size: .68rem;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  &[data-s="FINALISED"] { background: #fff3cd; color: #8a6d00; }
+  &[data-s="SUBMITTED"] { background: #d8f5e3; color: #0a7a3d; }
+}
+
+.detail header { display: flex; align-items: center; gap: .6rem; }
+
+.hint { color: #6b7280; font-size: .9rem; }
+.error { color: #b3261e; }

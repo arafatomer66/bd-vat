@@ -206,6 +206,10 @@ model VatReturn {
   netPayable           Decimal @default(0) @db.Decimal(18, 2)
   carryForward         Decimal @default(0) @db.Decimal(18, 2)
 
+  // Treasury challan reconciliation (payment proof for the net payable).
+  challanNo   String?
+  challanDate DateTime?
+
   submittedAt DateTime?
   createdAt   DateTime  @default(now())
 

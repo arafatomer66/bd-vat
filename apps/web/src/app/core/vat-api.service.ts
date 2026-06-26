@@ -66,11 +66,18 @@ export interface VatReturn {
   id: string;
   year: number;
   month: number;
-  status: string;
+  status: 'DRAFT' | 'FINALISED' | 'SUBMITTED';
   outputVat: string;
+  outputSd: string;
   inputVatRebate: string;
+  vdsWithheldOnSales: string;
+  increasingAdjustment: string;
+  decreasingAdjustment: string;
+  openingRebateBalance: string;
+  treasuryDeposits: string;
   netPayable: string;
   carryForward: string;
+  challanNo?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -198,5 +205,48 @@ export class VatApiService {
         { headers: this.headers() }
       )
     );
+  }
+
+  setReturnStatus(id: string, status: 'DRAFT' | 'FINALISED' | 'SUBMITTED') {
+    return firstValueFrom(
+      this.http.patch<VatReturn>(
+        `${API_BASE}/api/returns/${id}/status`,
+        { status },
+        { headers: this.headers() }
+      )
+    );
+  }
+
+  setChallan(id: string, body: { challanNo: string; treasuryDeposits: number; challanDate?: string }) {
+    return firstValueFrom(
+      this.http.patch<{ return: VatReturn }>(
+        `${API_BASE}/api/returns/${id}/challan`,
+        body,
+        { headers: this.headers() }
+      )
+    );
+  }
+
+  async openMushak91(id: string) {
+    const blob = await firstValueFrom(
+      this.http.get(`${API_BASE}/api/returns/${id}/mushak-9.1`, {
+        headers: this.headers(),
+        responseType: 'blob',
+      })
+    );
+    window.open(URL.createObjectURL(blob), '_blank');
+  }
+
+  async downloadRegister(year: number, month: number, type: '6.1' | '6.2') {
+    const blob = await firstValueFrom(
+      this.http.get(`${API_BASE}/api/returns/registers?type=${type}&year=${year}&month=${month}`, {
+        headers: this.headers(),
+        responseType: 'blob',
+      })
+    );
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `mushak-${type}-${year}-${month}.csv`;
+    a.click();
   }
 }
