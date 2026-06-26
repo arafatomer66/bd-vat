@@ -25,7 +25,7 @@
   }
 
   nav {
-    margin-left: auto;
+    margin-left: 1rem;
     display: flex;
     gap: .25rem;
     a {
@@ -36,6 +36,32 @@
       border-radius: 7px;
       &.active { background: rgba(255, 255, 255, .15); color: #fff; }
       &:hover { background: rgba(255, 255, 255, .1); }
+    }
+  }
+
+  .who {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: .82rem;
+    .co { color: #fff; font-weight: 600; }
+    .role {
+      background: rgba(255, 255, 255, .15);
+      color: #c6f6d5;
+      padding: .1rem .5rem;
+      border-radius: 999px;
+      font-size: .7rem;
+    }
+    button {
+      background: rgba(255, 255, 255, .12);
+      color: #fff;
+      border: none;
+      padding: .35rem .7rem;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: .8rem;
+      &:hover { background: rgba(255, 255, 255, .22); }
     }
   }
 }

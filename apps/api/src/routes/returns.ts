@@ -2,13 +2,14 @@ import { Router } from "express";
 import { z } from "zod";
 import { computeReturn } from "@bd-vat/vat-engine";
 import { prisma } from "../prisma.js";
-import { requireTenant } from "../middleware/tenant.js";
+import { requireAuth, requireWriter } from "../middleware/auth.js";
+import { audit } from "../audit.js";
 import { renderMushak91 } from "../mushak/mushak91.js";
 import { salesRegisterCsv, purchaseRegisterCsv } from "../mushak/registers.js";
 import { getNbrAdapter, type NbrSubmissionPackage, type RegisterRow } from "../nbr/adapter.js";
 
 export const returnsRouter = Router();
-returnsRouter.use(requireTenant);
+returnsRouter.use(requireAuth);
 
 const compileSchema = z.object({
   year: z.number().int().min(2019),
@@ -20,7 +21,7 @@ const compileSchema = z.object({
  * tenant's issued transactions, VDS certificates and adjustments, then running
  * the VAT engine. Upserts a DRAFT return the user can review and finalise.
  */
-returnsRouter.post("/compile", async (req, res) => {
+returnsRouter.post("/compile", requireWriter, async (req, res) => {
   const parsed = compileSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   const { year, month } = parsed.data;
@@ -131,7 +132,7 @@ returnsRouter.get("/:id", async (req, res) => {
 
 // Move a return through DRAFT -> FINALISED -> SUBMITTED.
 const statusSchema = z.object({ status: z.enum(["DRAFT", "FINALISED", "SUBMITTED"]) });
-returnsRouter.patch("/:id/status", async (req, res) => {
+returnsRouter.patch("/:id/status", requireWriter, async (req, res) => {
   const parsed = statusSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   const existing = await prisma.vatReturn.findFirst({
@@ -146,6 +147,7 @@ returnsRouter.patch("/:id/status", async (req, res) => {
       submittedAt: parsed.data.status === "SUBMITTED" ? new Date() : existing.submittedAt,
     },
   });
+  audit(req.tenantId!, req.user!.userId, `return.${parsed.data.status.toLowerCase()}`, "VatReturn", updated.id);
   res.json(updated);
 });
 
@@ -155,7 +157,7 @@ const challanSchema = z.object({
   challanDate: z.coerce.date().optional(),
   treasuryDeposits: z.number().nonnegative(),
 });
-returnsRouter.patch("/:id/challan", async (req, res) => {
+returnsRouter.patch("/:id/challan", requireWriter, async (req, res) => {
   const parsed = challanSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   const r = await prisma.vatReturn.findFirst({
@@ -285,7 +287,7 @@ async function buildNbrPackage(
 
 // Download the submission-ready NBR package (JSON).
 returnsRouter.get("/:id/nbr-package", async (req, res) => {
-  const pkg = await buildNbrPackage(req.tenantId!, req.params.id);
+  const pkg = await buildNbrPackage(req.tenantId!, req.params.id!);
   if (!pkg) return res.status(404).json({ error: "Not found" });
   res.setHeader("Content-Type", "application/json");
   res.setHeader(
@@ -296,10 +298,14 @@ returnsRouter.get("/:id/nbr-package", async (req, res) => {
 });
 
 // Hand the package to the configured NBR adapter (manual by default).
-returnsRouter.post("/:id/nbr-submit", async (req, res) => {
-  const pkg = await buildNbrPackage(req.tenantId!, req.params.id);
+returnsRouter.post("/:id/nbr-submit", requireWriter, async (req, res) => {
+  const pkg = await buildNbrPackage(req.tenantId!, req.params.id!);
   if (!pkg) return res.status(404).json({ error: "Not found" });
   const result = await getNbrAdapter().submit(pkg);
+  audit(req.tenantId!, req.user!.userId, "return.nbr-submit", "VatReturn", req.params.id, {
+    mode: result.mode,
+    accepted: result.accepted,
+  });
   res.json(result);
 });
 

@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { prisma } from "../prisma.js";
-import { requireTenant } from "../middleware/tenant.js";
+import { requireAuth } from "../middleware/auth.js";
 
 export const dashboardRouter = Router();
-dashboardRouter.use(requireTenant);
+dashboardRouter.use(requireAuth);
 
 /**
  * Aggregated figures for the dashboard:

@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,19 @@ async function main() {
       circle: "Circle-12",
       economicActivity: "Wholesale & retail trade",
       address: "Dhaka, Bangladesh",
+    },
+  });
+
+  // Demo owner login — owner@selefe.test / Password123
+  await prisma.user.upsert({
+    where: { email: "owner@selefe.test" },
+    update: {},
+    create: {
+      tenantId: tenant.id,
+      email: "owner@selefe.test",
+      passwordHash: await bcrypt.hash("Password123", 10),
+      name: "Demo Owner",
+      role: "OWNER",
     },
   });
 

@@ -27,7 +27,8 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 - ✅ Company onboarding with **13-digit BIN** validation
 - ✅ **12-digit e-TIN** capture & validation
 - ✅ NBR jurisdiction fields — Commissionerate / Division / Circle, economic activity
-- ⬜ User accounts & roles (Owner / Accountant / Viewer) with JWT auth
+- ✅ User accounts & roles (Owner / Accountant / Viewer) with **JWT auth**
+- ✅ Company signup (creates tenant + owner), login, staff-user management
 - ⬜ Multi-company switching for accounting-firm mode
 
 ### Master data
@@ -84,8 +85,8 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 ### Platform
 - ✅ npm-workspaces monorepo, shared TS config
 - ✅ Dockerised Postgres + Prisma migrations + seed data
-- ✅ Tenant-scoped API (`x-tenant-id` header in Phase 1)
-- ⬜ JWT auth, audit log, role-based authorization
+- ✅ **JWT auth**, token-derived tenant scope, role-based authorization (writer vs viewer)
+- ✅ Append-only **audit log** of significant actions
 - ⬜ CI (build + test), deployment
 
 ---
@@ -103,24 +104,33 @@ npm run db:seed -w @bd-vat/api   # demo company + transactions
 npm run dev:api                  # API on http://localhost:4000
 npm run dev:web                  # Angular on http://localhost:4200
 ```
+Sign in at `/login` with the seeded owner — **owner@selefe.test / Password123** — or
+create a new company from the signup form.
 
-## API (Phase 1)
-Tenant scope is provided via the `x-tenant-id` header (JWT auth lands in Phase 1.5).
+## API
+All `/api/*` routes except auth require an **`Authorization: Bearer <token>`** header.
+Tenant scope is derived from the token. Writes require OWNER/ACCOUNTANT; VIEWER is read-only.
 
-| Method | Path                         | Purpose                                  |
-|--------|------------------------------|------------------------------------------|
+| Method | Path                               | Purpose                                  |
+|--------|------------------------------------|------------------------------------------|
 | GET    | `/health`                          | Service health                           |
-| POST   | `/api/companies`                   | Onboard a company (BIN-validated)        |
-| GET    | `/api/companies`                   | List companies                           |
-| GET    | `/api/companies/:id`               | Get a company                            |
-| GET    | `/api/parties`                     | List customers/suppliers                 |
-| POST   | `/api/parties`                     | Create a party                           |
+| POST   | `/api/auth/signup`                 | Create company + owner, returns token    |
+| POST   | `/api/auth/login`                  | Log in, returns token                    |
+| GET    | `/api/auth/me`                     | Current user + company                   |
+| POST   | `/api/auth/users`                  | OWNER adds a staff user                  |
+| GET    | `/api/auth/audit`                  | Recent audit-log entries                 |
+| GET    | `/api/parties` · POST              | List / create customers & suppliers      |
 | POST   | `/api/transactions`                | Create a SALE (Mushak 6.3) or PURCHASE   |
-| GET    | `/api/transactions?kind=`          | List transactions                        |
-| GET    | `/api/transactions/:id`            | Get one transaction                      |
-| GET    | `/api/transactions/:id/mushak-6.3` | Download the Mushak 6.3 tax-invoice PDF  |
+| GET    | `/api/transactions/:id/mushak-6.3` | Mushak 6.3 tax-invoice PDF               |
+| GET    | `/api/vds` · POST                  | VDS (Mushak 6.6) certificates            |
+| GET    | `/api/adjustments` · POST          | Credit/debit notes (Mushak 6.7/6.8)      |
 | POST   | `/api/returns/compile`             | Compile Mushak 9.1 for `{year, month}`   |
-| GET    | `/api/returns`                     | List compiled returns                    |
+| PATCH  | `/api/returns/:id/status`          | DRAFT / FINALISED / SUBMITTED            |
+| PATCH  | `/api/returns/:id/challan`         | Record treasury challan, recompute net   |
+| GET    | `/api/returns/:id/mushak-9.1`      | Mushak 9.1 return PDF                     |
+| GET    | `/api/returns/registers?type=`     | Mushak 6.1 / 6.2 register CSV             |
+| GET    | `/api/returns/:id/nbr-package`     | Submission-ready NBR package (JSON)      |
+| GET    | `/api/dashboard/summary`           | VDS / trend / deadline summary           |
 
 ## Roadmap
 1. **Foundation** ✅ monorepo, Prisma model, vat-engine, API skeleton, Angular shell

@@ -1,8 +1,8 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-
-const API_BASE = 'http://localhost:4000';
+import { API_BASE } from './api-base';
+import { AuthService } from './auth.service';
 
 export interface Company {
   id: string;
@@ -88,35 +88,20 @@ export interface DashboardSummary {
 
 @Injectable({ providedIn: 'root' })
 export class VatApiService {
-  readonly companies = signal<Company[]>([]);
-  readonly currentTenantId = signal<string | null>(null);
-  private tenantLoaded?: Promise<void>;
+  constructor(private readonly http: HttpClient, private readonly auth: AuthService) {}
 
-  constructor(private readonly http: HttpClient) {}
-
-  private headers() {
-    return new HttpHeaders({ 'x-tenant-id': this.currentTenantId() ?? '' });
+  /** Token is attached by authInterceptor; this is now a no-op options bag. */
+  private headers(): undefined {
+    return undefined;
   }
 
   health() {
     return firstValueFrom(this.http.get<{ ok: boolean }>(`${API_BASE}/health`));
   }
 
-  /** Load companies once and select the first as the active tenant (pre-auth bootstrap). */
+  /** Ensure the authenticated user/company is loaded before scoped calls. */
   ensureTenant(): Promise<void> {
-    if (!this.tenantLoaded) {
-      this.tenantLoaded = firstValueFrom(
-        this.http.get<Company[]>(`${API_BASE}/api/companies`)
-      ).then((list) => {
-        this.companies.set(list);
-        if (list.length && !this.currentTenantId()) this.currentTenantId.set(list[0].id);
-      });
-    }
-    return this.tenantLoaded;
-  }
-
-  setTenant(id: string) {
-    this.currentTenantId.set(id);
+    return this.auth.ensureLoaded();
   }
 
   listParties() {

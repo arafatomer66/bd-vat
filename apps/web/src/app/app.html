@@ -1,13 +1,19 @@
-<header class="topbar">
-  <span class="brand">bd<strong>vat</strong></span>
-  <span class="tag">Bangladesh VAT · NBR / Mushak</span>
-  <nav>
-    <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
-    <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
-    <a routerLink="/adjustments" routerLinkActive="active">VDS &amp; Notes</a>
-    <a routerLink="/returns" routerLinkActive="active">Returns</a>
-  </nav>
-</header>
+@if (auth.isAuthenticated()) {
+  <header class="topbar">
+    <span class="brand">bd<strong>vat</strong></span>
+    <nav>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
+      <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
+      <a routerLink="/adjustments" routerLinkActive="active">VDS &amp; Notes</a>
+      <a routerLink="/returns" routerLinkActive="active">Returns</a>
+    </nav>
+    <div class="who">
+      <span class="co">{{ auth.company()?.name }}</span>
+      <span class="role">{{ auth.user()?.role }}</span>
+      <button (click)="logout()">Sign out</button>
+    </div>
+  </header>
+}
 
 <main>
   <router-outlet />

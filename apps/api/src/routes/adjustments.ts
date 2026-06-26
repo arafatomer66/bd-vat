@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma.js";
-import { requireTenant } from "../middleware/tenant.js";
+import { requireAuth, requireWriter } from "../middleware/auth.js";
 
 export const adjustmentsRouter = Router();
-adjustmentsRouter.use(requireTenant);
+adjustmentsRouter.use(requireAuth);
 
 const createAdjustmentSchema = z.object({
   // Credit note (6.7) decreases net payable; debit note (6.8) increases it.
@@ -18,7 +18,7 @@ const createAdjustmentSchema = z.object({
 });
 
 // Issue a credit/debit note or other increasing/decreasing adjustment.
-adjustmentsRouter.post("/", async (req, res) => {
+adjustmentsRouter.post("/", requireWriter, async (req, res) => {
   const parsed = createAdjustmentSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   // Default the Mushak form from the direction if not given.

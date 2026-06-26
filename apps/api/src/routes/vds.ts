@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../prisma.js";
-import { requireTenant } from "../middleware/tenant.js";
+import { requireAuth, requireWriter } from "../middleware/auth.js";
 
 export const vdsRouter = Router();
-vdsRouter.use(requireTenant);
+vdsRouter.use(requireAuth);
 
 const createVdsSchema = z.object({
   certificateNo: z.string().min(1),
@@ -17,7 +17,7 @@ const createVdsSchema = z.object({
 });
 
 // Mushak 6.6 — record a VAT-Deducted-at-Source certificate.
-vdsRouter.post("/", async (req, res) => {
+vdsRouter.post("/", requireWriter, async (req, res) => {
   const parsed = createVdsSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   const cert = await prisma.vdsCertificate.create({

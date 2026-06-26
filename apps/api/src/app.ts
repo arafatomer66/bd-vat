@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import { authRouter } from "./routes/auth.js";
 import { companiesRouter } from "./routes/companies.js";
 import { partiesRouter } from "./routes/parties.js";
 import { transactionsRouter } from "./routes/transactions.js";
@@ -15,6 +16,7 @@ export function createApp() {
 
   app.get("/health", (_req, res) => res.json({ ok: true, service: "bd-vat-api" }));
 
+  app.use("/api/auth", authRouter);
   app.use("/api/companies", companiesRouter);
   app.use("/api/parties", partiesRouter);
   app.use("/api/transactions", transactionsRouter);

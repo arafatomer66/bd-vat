@@ -1,0 +1,33 @@
+<div class="auth">
+  <div class="auth__card">
+    <div class="brand">bd<strong>vat</strong></div>
+    <p class="sub">Bangladesh VAT management · NBR / Mushak</p>
+
+    <h1>{{ mode() === 'login' ? 'Sign in' : 'Create your company' }}</h1>
+
+    @if (error()) { <p class="err">{{ error() }}</p> }
+
+    <form (ngSubmit)="submit()">
+      @if (mode() === 'signup') {
+        <input type="text" [(ngModel)]="companyName" name="companyName" placeholder="Company name" required />
+        <input type="text" [(ngModel)]="bin" name="bin" placeholder="BIN (13 digits)" required />
+        <input type="text" [(ngModel)]="tin" name="tin" placeholder="e-TIN (12 digits, optional)" />
+        <input type="text" [(ngModel)]="name" name="name" placeholder="Your name" />
+      }
+      <input type="email" [(ngModel)]="email" name="email" placeholder="Email" required />
+      <input type="password" [(ngModel)]="password" name="password" placeholder="Password (min 8 chars)" required />
+      <button type="submit" [disabled]="busy()">
+        {{ busy() ? 'Please wait…' : mode() === 'login' ? 'Sign in' : 'Create company' }}
+      </button>
+    </form>
+
+    <p class="toggle">
+      {{ mode() === 'login' ? 'New here?' : 'Already have an account?' }}
+      <a (click)="toggle()">{{ mode() === 'login' ? 'Create a company' : 'Sign in' }}</a>
+    </p>
+
+    @if (mode() === 'login') {
+      <p class="demo">Demo: <code>owner&#64;selefe.test</code> / <code>Password123</code></p>
+    }
+  </div>
+</div>

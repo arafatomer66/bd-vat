@@ -2,10 +2,10 @@ import { Router } from "express";
 import { z } from "zod";
 import { isValidBin } from "@bd-vat/shared";
 import { prisma } from "../prisma.js";
-import { requireTenant } from "../middleware/tenant.js";
+import { requireAuth, requireWriter } from "../middleware/auth.js";
 
 export const partiesRouter = Router();
-partiesRouter.use(requireTenant);
+partiesRouter.use(requireAuth);
 
 const createPartySchema = z.object({
   name: z.string().min(1),
@@ -14,7 +14,7 @@ const createPartySchema = z.object({
   address: z.string().optional(),
 });
 
-partiesRouter.post("/", async (req, res) => {
+partiesRouter.post("/", requireWriter, async (req, res) => {
   const parsed = createPartySchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   const party = await prisma.party.create({

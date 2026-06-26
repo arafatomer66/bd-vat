@@ -2,11 +2,12 @@ import { Router } from "express";
 import { z } from "zod";
 import { computeInvoice, type InvoiceLineInput } from "@bd-vat/vat-engine";
 import { prisma } from "../prisma.js";
-import { requireTenant } from "../middleware/tenant.js";
+import { requireAuth, requireWriter } from "../middleware/auth.js";
+import { audit } from "../audit.js";
 import { renderMushak63 } from "../mushak/mushak63.js";
 
 export const transactionsRouter = Router();
-transactionsRouter.use(requireTenant);
+transactionsRouter.use(requireAuth);
 
 const lineSchema = z.object({
   description: z.string().min(1),
@@ -26,7 +27,7 @@ const createTxnSchema = z.object({
 });
 
 // Create a SALE (Mushak 6.3) or PURCHASE; totals computed by the VAT engine.
-transactionsRouter.post("/", async (req, res) => {
+transactionsRouter.post("/", requireWriter, async (req, res) => {
   const parsed = createTxnSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
@@ -77,6 +78,10 @@ transactionsRouter.post("/", async (req, res) => {
     include: { lines: true },
   });
 
+  audit(req.tenantId!, req.user!.userId, "transaction.create", "Transaction", txn.id, {
+    kind: txn.kind,
+    grandTotal: txn.grandTotal.toString(),
+  });
   res.status(201).json(txn);
 });
 
