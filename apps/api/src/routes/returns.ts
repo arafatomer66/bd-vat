@@ -5,6 +5,7 @@ import { prisma } from "../prisma.js";
 import { requireTenant } from "../middleware/tenant.js";
 import { renderMushak91 } from "../mushak/mushak91.js";
 import { salesRegisterCsv, purchaseRegisterCsv } from "../mushak/registers.js";
+import { getNbrAdapter, type NbrSubmissionPackage, type RegisterRow } from "../nbr/adapter.js";
 
 export const returnsRouter = Router();
 returnsRouter.use(requireTenant);
@@ -218,6 +219,88 @@ returnsRouter.get("/:id/mushak-9.1", async (req, res) => {
     },
     res
   );
+});
+
+// --- NBR submission boundary -------------------------------------------------
+
+async function buildNbrPackage(
+  tenantId: string,
+  returnId: string
+): Promise<NbrSubmissionPackage | null> {
+  const r = await prisma.vatReturn.findFirst({ where: { id: returnId, tenantId } });
+  if (!r) return null;
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  if (!tenant) return null;
+
+  const range = {
+    gte: new Date(Date.UTC(r.year, r.month - 1, 1)),
+    lt: new Date(Date.UTC(r.year, r.month, 1)),
+  };
+  const [sales, purchases] = await Promise.all([
+    prisma.transaction.findMany({
+      where: { tenantId, kind: "SALE", status: "ISSUED", issuedAt: range },
+      include: { party: true },
+      orderBy: { issuedAt: "asc" },
+    }),
+    prisma.transaction.findMany({
+      where: { tenantId, kind: "PURCHASE", status: "ISSUED", issuedAt: range },
+      include: { party: true },
+      orderBy: { issuedAt: "asc" },
+    }),
+  ]);
+
+  const toRow = (t: (typeof sales)[number]): RegisterRow => ({
+    date: t.issuedAt.toISOString().slice(0, 10),
+    invoiceNo: t.mushakNo ?? "",
+    party: t.party?.name ?? "",
+    partyBin: t.party?.bin ?? "",
+    net: t.netTotal.toString(),
+    sd: t.sdTotal.toString(),
+    vat: t.vatTotal.toString(),
+    total: t.grandTotal.toString(),
+  });
+
+  return {
+    schema: "bd-vat.nbr.mushak-9.1",
+    version: 1,
+    company: { name: tenant.name, bin: tenant.bin, tin: tenant.tin },
+    period: { year: r.year, month: r.month },
+    return: {
+      outputVat: r.outputVat.toString(),
+      outputSd: r.outputSd.toString(),
+      inputVatRebate: r.inputVatRebate.toString(),
+      vdsWithheldOnSales: r.vdsWithheldOnSales.toString(),
+      increasingAdjustment: r.increasingAdjustment.toString(),
+      decreasingAdjustment: r.decreasingAdjustment.toString(),
+      openingRebateBalance: r.openingRebateBalance.toString(),
+      treasuryDeposits: r.treasuryDeposits.toString(),
+      netPayable: r.netPayable.toString(),
+      carryForward: r.carryForward.toString(),
+      challanNo: r.challanNo,
+    },
+    registers: { sales: sales.map(toRow), purchases: purchases.map(toRow) },
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+// Download the submission-ready NBR package (JSON).
+returnsRouter.get("/:id/nbr-package", async (req, res) => {
+  const pkg = await buildNbrPackage(req.tenantId!, req.params.id);
+  if (!pkg) return res.status(404).json({ error: "Not found" });
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="nbr-9.1-${pkg.period.year}-${pkg.period.month}.json"`
+  );
+  res.send(JSON.stringify(pkg, null, 2));
+});
+
+// Hand the package to the configured NBR adapter (manual by default).
+returnsRouter.post("/:id/nbr-submit", async (req, res) => {
+  const pkg = await buildNbrPackage(req.tenantId!, req.params.id);
+  if (!pkg) return res.status(404).json({ error: "Not found" });
+  const result = await getNbrAdapter().submit(pkg);
+  res.json(result);
 });
 
 function priorPeriod(tenantId: string, year: number, month: number) {

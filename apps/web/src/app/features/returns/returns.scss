@@ -92,5 +92,15 @@ button {
 
 .detail header { display: flex; align-items: center; gap: .6rem; }
 
+.nbr-msg {
+  margin: .75rem 0 0;
+  padding: .6rem .8rem;
+  background: #eef6ff;
+  border: 1px solid #cfe2ff;
+  border-radius: 8px;
+  font-size: .82rem;
+  color: #1e40af;
+}
+
 .hint { color: #6b7280; font-size: .9rem; }
 .error { color: #b3261e; }

@@ -249,6 +249,29 @@ export class VatApiService {
     window.open(URL.createObjectURL(blob), '_blank');
   }
 
+  async downloadNbrPackage(id: string, year: number, month: number) {
+    const blob = await firstValueFrom(
+      this.http.get(`${API_BASE}/api/returns/${id}/nbr-package`, {
+        headers: this.headers(),
+        responseType: 'blob',
+      })
+    );
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nbr-9.1-${year}-${month}.json`;
+    a.click();
+  }
+
+  nbrSubmit(id: string) {
+    return firstValueFrom(
+      this.http.post<{ accepted: boolean; mode: string; message: string }>(
+        `${API_BASE}/api/returns/${id}/nbr-submit`,
+        {},
+        { headers: this.headers() }
+      )
+    );
+  }
+
   async downloadRegister(year: number, month: number, type: '6.1' | '6.2') {
     const blob = await firstValueFrom(
       this.http.get(`${API_BASE}/api/returns/registers?type=${type}&year=${year}&month=${month}`, {

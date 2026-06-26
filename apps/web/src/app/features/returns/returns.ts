@@ -20,6 +20,7 @@ export class Returns {
   protected month = new Date().getMonth() + 1;
   protected challanNo = '';
   protected treasuryDeposits = 0;
+  protected nbrMessage = signal<string | null>(null);
 
   constructor(private readonly api: VatApiService) {
     void this.load();
@@ -50,6 +51,7 @@ export class Returns {
     this.selected.set(r);
     this.challanNo = r.challanNo ?? '';
     this.treasuryDeposits = +r.treasuryDeposits || 0;
+    this.nbrMessage.set(null);
   }
 
   async setStatus(status: 'DRAFT' | 'FINALISED' | 'SUBMITTED') {
@@ -79,6 +81,18 @@ export class Returns {
   register(type: '6.1' | '6.2') {
     const r = this.selected();
     if (r) void this.api.downloadRegister(r.year, r.month, type);
+  }
+
+  nbrPackage() {
+    const r = this.selected();
+    if (r) void this.api.downloadNbrPackage(r.id, r.year, r.month);
+  }
+
+  async nbrSubmit() {
+    const r = this.selected();
+    if (!r) return;
+    const result = await this.api.nbrSubmit(r.id);
+    this.nbrMessage.set(result.message);
   }
 
   monthName(m: number) {

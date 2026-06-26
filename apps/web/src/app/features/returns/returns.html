@@ -49,7 +49,10 @@
           <button class="ghost" (click)="pdf()">Mushak 9.1 PDF</button>
           <button class="ghost" (click)="register('6.2')">6.2 sales CSV</button>
           <button class="ghost" (click)="register('6.1')">6.1 purchase CSV</button>
+          <button class="ghost" (click)="nbrPackage()">NBR package (JSON)</button>
+          <button (click)="nbrSubmit()">Submit to NBR</button>
         </div>
+        @if (nbrMessage(); as msg) { <p class="nbr-msg">{{ msg }}</p> }
 
         <div class="workflow">
           <span>Workflow:</span>
