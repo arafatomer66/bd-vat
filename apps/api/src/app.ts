@@ -6,6 +6,7 @@ import { transactionsRouter } from "./routes/transactions.js";
 import { vdsRouter } from "./routes/vds.js";
 import { adjustmentsRouter } from "./routes/adjustments.js";
 import { returnsRouter } from "./routes/returns.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 
 export function createApp() {
   const app = express();
@@ -20,6 +21,7 @@ export function createApp() {
   app.use("/api/vds", vdsRouter);
   app.use("/api/adjustments", adjustmentsRouter);
   app.use("/api/returns", returnsRouter);
+  app.use("/api/dashboard", dashboardRouter);
 
   return app;
 }

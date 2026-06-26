@@ -80,6 +80,12 @@ export interface VatReturn {
   challanNo?: string;
 }
 
+export interface DashboardSummary {
+  months: { period: string; output: number; input: number; net: number }[];
+  vds: { receivable: string; payable: string };
+  deadline: { period: string; dueDate: string; daysRemaining: number; filed: boolean };
+}
+
 @Injectable({ providedIn: 'root' })
 export class VatApiService {
   readonly companies = signal<Company[]>([]);
@@ -188,6 +194,12 @@ export class VatApiService {
   }) {
     return firstValueFrom(
       this.http.post<Adjustment>(`${API_BASE}/api/adjustments`, body, { headers: this.headers() })
+    );
+  }
+
+  dashboardSummary() {
+    return firstValueFrom(
+      this.http.get<DashboardSummary>(`${API_BASE}/api/dashboard/summary`, { headers: this.headers() })
     );
   }
 

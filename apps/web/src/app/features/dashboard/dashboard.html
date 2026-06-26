@@ -8,34 +8,55 @@
     </span>
   </header>
 
-  @if (error()) {
-    <p class="hint">{{ error() }}</p>
-  }
+  @if (error()) { <p class="hint">{{ error() }}</p> }
 
-  <div class="cards">
-    <article class="card">
-      <p class="card__label">Standard VAT rate</p>
-      <p class="card__value">15%</p>
-      <p class="card__sub">+ truncated rates 1.5–10%</p>
-    </article>
-    <article class="card">
-      <p class="card__label">Return due</p>
-      <p class="card__value">15th</p>
-      <p class="card__sub">Mushak 9.1, each month</p>
-    </article>
-    <article class="card">
-      <p class="card__label">Compiled returns</p>
-      <p class="card__value">{{ returns().length }}</p>
-      <p class="card__sub">periods on record</p>
-    </article>
-  </div>
+  @if (summary(); as s) {
+    <!-- Filing deadline alert -->
+    <div class="alert"
+         [class.alert--ok]="s.deadline.filed"
+         [class.alert--warn]="!s.deadline.filed && s.deadline.daysRemaining >= 0"
+         [class.alert--late]="!s.deadline.filed && s.deadline.daysRemaining < 0">
+      @if (s.deadline.filed) {
+        ✓ Return for {{ s.deadline.period }} has been submitted.
+      } @else if (s.deadline.daysRemaining >= 0) {
+        ⏳ Mushak 9.1 for {{ s.deadline.period }} is due {{ s.deadline.dueDate }} —
+        {{ s.deadline.daysRemaining }} day(s) left. <a routerLink="/returns">Go to returns →</a>
+      } @else {
+        ⚠ Mushak 9.1 for {{ s.deadline.period }} was due {{ s.deadline.dueDate }} —
+        {{ -s.deadline.daysRemaining }} day(s) overdue. <a routerLink="/returns">File now →</a>
+      }
+    </div>
+
+    <div class="cards">
+      <article class="card"><p class="card__label">Standard VAT</p><p class="card__value">15%</p><p class="card__sub">+ truncated 1.5–10%</p></article>
+      <article class="card"><p class="card__label">VDS receivable</p><p class="card__value">৳ {{ s.vds.receivable }}</p><p class="card__sub">withheld on our sales</p></article>
+      <article class="card"><p class="card__label">VDS payable</p><p class="card__value">৳ {{ s.vds.payable }}</p><p class="card__sub">we withheld on purchases</p></article>
+      <article class="card"><p class="card__label">Returns on record</p><p class="card__value">{{ returns().length }}</p><p class="card__sub">periods compiled</p></article>
+    </div>
+
+    <!-- Output vs input trend -->
+    <h2>Output vs input VAT</h2>
+    @if (s.months.length) {
+      <div class="trend">
+        @for (m of s.months; track m.period) {
+          <div class="trend__col">
+            <div class="bars">
+              <div class="bar bar--out" [style.height.%]="barPct(m.output)" [title]="'Output ৳ ' + m.output"></div>
+              <div class="bar bar--in" [style.height.%]="barPct(m.input)" [title]="'Input ৳ ' + m.input"></div>
+            </div>
+            <span class="trend__label">{{ m.period }}</span>
+            <span class="trend__net" [class.pos]="m.net >= 0">৳ {{ m.net | number:'1.0-0' }}</span>
+          </div>
+        }
+        <div class="legend"><span class="dot out"></span> Output <span class="dot in"></span> Input</div>
+      </div>
+    } @else { <p class="hint">No transactions yet to chart.</p> }
+  }
 
   <h2>Monthly returns (Mushak 9.1)</h2>
   @if (returns().length) {
     <table class="returns">
-      <thead>
-        <tr><th>Period</th><th>Output VAT</th><th>Input rebate</th><th>Net payable</th><th>Carry fwd</th><th>Status</th></tr>
-      </thead>
+      <thead><tr><th>Period</th><th>Output VAT</th><th>Input rebate</th><th>Net payable</th><th>Status</th></tr></thead>
       <tbody>
         @for (r of returns(); track r.id) {
           <tr>
@@ -43,14 +64,12 @@
             <td>৳ {{ r.outputVat }}</td>
             <td>৳ {{ r.inputVatRebate }}</td>
             <td class="strong">৳ {{ r.netPayable }}</td>
-            <td>৳ {{ r.carryForward }}</td>
             <td>{{ r.status }}</td>
           </tr>
         }
       </tbody>
     </table>
   } @else {
-    <p class="hint">No returns compiled yet. Seed the DB and compile a period via
-      <code>POST /api/returns/compile</code>.</p>
+    <p class="hint">No returns compiled yet — head to <a routerLink="/returns">Returns</a>.</p>
   }
 </section>
