@@ -3,6 +3,7 @@ import cors from "cors";
 import { authRouter } from "./routes/auth.js";
 import { companiesRouter } from "./routes/companies.js";
 import { partiesRouter } from "./routes/parties.js";
+import { productsRouter } from "./routes/products.js";
 import { transactionsRouter } from "./routes/transactions.js";
 import { vdsRouter } from "./routes/vds.js";
 import { adjustmentsRouter } from "./routes/adjustments.js";
@@ -19,6 +20,7 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/companies", companiesRouter);
   app.use("/api/parties", partiesRouter);
+  app.use("/api/products", productsRouter);
   app.use("/api/transactions", transactionsRouter);
   app.use("/api/vds", vdsRouter);
   app.use("/api/adjustments", adjustmentsRouter);

@@ -20,6 +20,15 @@ export interface Party {
   address?: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  unit?: string;
+  hsCode?: string;
+  vatRate: string;
+  sdRate: string;
+}
+
 export interface TxnLine {
   description: string;
   quantity: number;
@@ -102,6 +111,30 @@ export class VatApiService {
   /** Ensure the authenticated user/company is loaded before scoped calls. */
   ensureTenant(): Promise<void> {
     return this.auth.ensureLoaded();
+  }
+
+  listProducts() {
+    return firstValueFrom(
+      this.http.get<Product[]>(`${API_BASE}/api/products`, { headers: this.headers() })
+    );
+  }
+
+  createProduct(body: { name: string; unit?: string; hsCode?: string; vatRate: number; sdRate: number }) {
+    return firstValueFrom(
+      this.http.post<Product>(`${API_BASE}/api/products`, body, { headers: this.headers() })
+    );
+  }
+
+  importProducts(rows: unknown[]) {
+    return firstValueFrom(
+      this.http.post<{ imported: number }>(`${API_BASE}/api/products/import`, { rows }, { headers: this.headers() })
+    );
+  }
+
+  importParties(rows: unknown[]) {
+    return firstValueFrom(
+      this.http.post<{ imported: number }>(`${API_BASE}/api/parties/import`, { rows }, { headers: this.headers() })
+    );
   }
 
   listParties() {

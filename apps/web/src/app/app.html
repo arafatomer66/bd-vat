@@ -6,9 +6,18 @@
       <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
       <a routerLink="/adjustments" routerLinkActive="active">VDS &amp; Notes</a>
       <a routerLink="/returns" routerLinkActive="active">Returns</a>
+      <a routerLink="/master-data" routerLinkActive="active">Master data</a>
     </nav>
     <div class="who">
-      <span class="co">{{ auth.company()?.name }}</span>
+      @if (companies().length > 1) {
+        <select [(ngModel)]="activeId" (change)="onSwitch()" class="co-switch">
+          @for (c of companies(); track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      } @else {
+        <span class="co">{{ auth.company()?.name }}</span>
+      }
       <span class="role">{{ auth.user()?.role }}</span>
       <button (click)="logout()">Sign out</button>
     </div>

@@ -109,6 +109,66 @@ authRouter.get("/users", requireAuth, async (req, res) => {
   res.json(users.map(publicUser));
 });
 
+// --- Multi-company (accounting-firm mode) ------------------------------------
+
+/** All tenants the user can act for: their home tenant plus explicit memberships. */
+async function accessibleTenants(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { tenant: true, memberships: { include: { tenant: true } } },
+  });
+  if (!user) return [];
+  const map = new Map<string, { id: string; name: string; bin: string; role: string }>();
+  map.set(user.tenantId, { id: user.tenant.id, name: user.tenant.name, bin: user.tenant.bin, role: user.role });
+  for (const m of user.memberships) {
+    if (!map.has(m.tenantId)) {
+      map.set(m.tenantId, { id: m.tenant.id, name: m.tenant.name, bin: m.tenant.bin, role: m.role });
+    }
+  }
+  return [...map.values()];
+}
+
+authRouter.get("/memberships", requireAuth, async (req, res) => {
+  res.json(await accessibleTenants(req.user!.userId));
+});
+
+// Switch the active company; issues a fresh token scoped to that tenant + role.
+const switchSchema = z.object({ tenantId: z.string().min(1) });
+authRouter.post("/switch", requireAuth, async (req, res) => {
+  const parsed = switchSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const tenants = await accessibleTenants(req.user!.userId);
+  const target = tenants.find((t) => t.id === parsed.data.tenantId);
+  if (!target) return res.status(403).json({ error: "No access to that company" });
+
+  const token = signToken({
+    userId: req.user!.userId,
+    tenantId: target.id,
+    role: target.role as "OWNER" | "ACCOUNTANT" | "VIEWER",
+  });
+  res.json({ token, company: { id: target.id, name: target.name, bin: target.bin } });
+});
+
+// OWNER attaches an existing user (by email) to this company as staff.
+const attachSchema = z.object({
+  email: z.string().email(),
+  role: z.enum(["OWNER", "ACCOUNTANT", "VIEWER"]).default("ACCOUNTANT"),
+});
+authRouter.post("/memberships", requireAuth, requireRole("OWNER"), async (req, res) => {
+  const parsed = attachSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+  if (!user) return res.status(404).json({ error: "No user with that email" });
+
+  const membership = await prisma.membership.upsert({
+    where: { userId_tenantId: { userId: user.id, tenantId: req.tenantId! } },
+    update: { role: parsed.data.role },
+    create: { userId: user.id, tenantId: req.tenantId!, role: parsed.data.role },
+  });
+  audit(req.tenantId!, req.user!.userId, "membership.attach", "User", user.id, { role: membership.role });
+  res.status(201).json({ ok: true });
+});
+
 authRouter.get("/audit", requireAuth, async (req, res) => {
   const logs = await prisma.auditLog.findMany({
     where: { tenantId: req.tenantId! },

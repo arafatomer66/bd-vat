@@ -46,6 +46,15 @@
     gap: .6rem;
     font-size: .82rem;
     .co { color: #fff; font-weight: 600; }
+    .co-switch {
+      background: rgba(255, 255, 255, .12);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, .25);
+      border-radius: 7px;
+      padding: .3rem .5rem;
+      font-size: .8rem;
+      option { color: #18181b; }
+    }
     .role {
       background: rgba(255, 255, 255, .15);
       color: #c6f6d5;

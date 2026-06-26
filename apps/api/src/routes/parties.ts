@@ -30,3 +30,14 @@ partiesRouter.get("/", async (req, res) => {
   });
   res.json(parties);
 });
+
+// Bulk import parties from a parsed row array (client parses the CSV file).
+const importSchema = z.object({ rows: z.array(createPartySchema).min(1).max(2000) });
+partiesRouter.post("/import", requireWriter, async (req, res) => {
+  const parsed = importSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const result = await prisma.party.createMany({
+    data: parsed.data.rows.map((r) => ({ ...r, tenantId: req.tenantId! })),
+  });
+  res.status(201).json({ imported: result.count });
+});

@@ -29,13 +29,13 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 - ✅ NBR jurisdiction fields — Commissionerate / Division / Circle, economic activity
 - ✅ User accounts & roles (Owner / Accountant / Viewer) with **JWT auth**
 - ✅ Company signup (creates tenant + owner), login, staff-user management
-- ⬜ Multi-company switching for accounting-firm mode
+- ✅ **Multi-company switching** for accounting-firm mode (memberships + token re-scope)
 
 ### Master data
 - ✅ Products / services with per-item **VAT rate** and **Supplementary Duty (SD) rate**
 - ✅ HS code & unit of measure on products
 - ✅ Parties (customers / suppliers) with counterparty BIN for B2B input rebate
-- ⬜ Bulk import of products & parties (CSV/Excel)
+- ✅ **CSV bulk import** of products & parties (quoted-field aware parser)
 
 ### VAT calculation engine (`packages/vat-engine`, fully unit-tested)
 - ✅ **Standard 15% VAT** on taxable supplies
@@ -87,7 +87,8 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 - ✅ Dockerised Postgres + Prisma migrations + seed data
 - ✅ **JWT auth**, token-derived tenant scope, role-based authorization (writer vs viewer)
 - ✅ Append-only **audit log** of significant actions
-- ⬜ CI (build + test), deployment
+- ✅ **GitHub Actions CI** (build all workspaces + run engine tests)
+- ⬜ Deployment
 
 ---
 
@@ -135,6 +136,12 @@ Tenant scope is derived from the token. Writes require OWNER/ACCOUNTANT; VIEWER 
 ## Roadmap
 1. **Foundation** ✅ monorepo, Prisma model, vat-engine, API skeleton, Angular shell
 2. **Transactions UI + Mushak 6.3 PDF invoice** ✅
-3. Full `vat-engine` wiring (VDS, SD, adjustments end-to-end) — *core trust layer*
-4. Mushak 9.1 return + 6.1/6.2 registers + dashboard (payable, deadlines)
-5. `NbrAdapter` — submission-ready package + portal automation hook
+3. **VDS, credit/debit notes, invoice numbering** ✅
+4. **Mushak 9.1 return + 6.1/6.2 registers + treasury challan** ✅
+5. **Dashboard reporting & filing-deadline alerts** ✅
+6. **`NbrAdapter` — submission-ready package** ✅
+7. **JWT auth, roles, audit log** ✅
+8. **CSV bulk import, multi-company switching, CI** ✅
+
+**Remaining:** Bengali (Mushak) PDF fonts, deployment, and real NBR/IVAS portal
+automation (blocked on NBR exposing an API — `IvasNbrAdapter` is the drop-in point).

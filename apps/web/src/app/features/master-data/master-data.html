@@ -1,0 +1,49 @@
+<section class="md">
+  <h1>Master data</h1>
+  @if (error()) { <p class="msg err">{{ error() }}</p> }
+  @if (message()) { <p class="msg ok">{{ message() }}</p> }
+
+  <div class="grid">
+    <div class="card">
+      <h2>Products &amp; services</h2>
+      <form (ngSubmit)="addProduct()" class="prod-form">
+        <input type="text" [(ngModel)]="name" name="name" placeholder="Name" />
+        <input type="text" [(ngModel)]="unit" name="unit" placeholder="Unit" class="sm" />
+        <select [(ngModel)]="vatRate" name="vatRate">
+          <option [ngValue]="0.15">15%</option>
+          <option [ngValue]="0.1">10%</option>
+          <option [ngValue]="0.075">7.5%</option>
+          <option [ngValue]="0.05">5%</option>
+          <option [ngValue]="0">0%</option>
+        </select>
+        <button type="submit">Add</button>
+      </form>
+
+      <label class="import">
+        Import products CSV
+        <input type="file" accept=".csv" (change)="importProducts($event)" />
+      </label>
+      <p class="hint">Columns: <code>name, unit, hsCode, vatRate, sdRate</code> (rates as decimals, e.g. 0.15)</p>
+
+      @if (products().length) {
+        <table>
+          <thead><tr><th>Name</th><th>Unit</th><th class="num">VAT</th><th class="num">SD</th></tr></thead>
+          <tbody>
+            @for (p of products(); track p.id) {
+              <tr><td>{{ p.name }}</td><td>{{ p.unit || '—' }}</td><td class="num">{{ +p.vatRate * 100 }}%</td><td class="num">{{ +p.sdRate * 100 }}%</td></tr>
+            }
+          </tbody>
+        </table>
+      } @else { <p class="hint">No products yet.</p> }
+    </div>
+
+    <div class="card">
+      <h2>Parties (customers &amp; suppliers)</h2>
+      <label class="import">
+        Import parties CSV
+        <input type="file" accept=".csv" (change)="importParties($event)" />
+      </label>
+      <p class="hint">Columns: <code>name, bin, type, address</code> (type = CUSTOMER / SUPPLIER / BOTH)</p>
+    </div>
+  </div>
+</section>

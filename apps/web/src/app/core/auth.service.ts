@@ -59,6 +59,25 @@ export class AuthService {
     this.apply(res);
   }
 
+  memberships() {
+    return firstValueFrom(
+      this.http.get<{ id: string; name: string; bin: string; role: string }[]>(
+        `${API_BASE}/api/auth/memberships`
+      )
+    );
+  }
+
+  async switchCompany(tenantId: string) {
+    const res = await firstValueFrom(
+      this.http.post<{ token: string; company: AuthCompany }>(`${API_BASE}/api/auth/switch`, { tenantId })
+    );
+    localStorage.setItem(TOKEN_KEY, res.token);
+    this.company.set(res.company);
+    // Refresh role/user for the new tenant.
+    this.loaded = undefined;
+    await this.ensureLoaded();
+  }
+
   logout() {
     localStorage.removeItem(TOKEN_KEY);
     this.user.set(null);

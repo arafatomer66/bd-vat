@@ -65,6 +65,7 @@ model Tenant {
   returns      VatReturn[]
   vdsCerts     VdsCertificate[]
   auditLogs    AuditLog[]
+  memberships  Membership[]
 }
 
 // Append-only audit trail of significant actions per tenant.
@@ -84,7 +85,7 @@ model AuditLog {
 
 model User {
   id           String   @id @default(cuid())
-  tenantId     String
+  tenantId     String // home tenant
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   email        String   @unique
   passwordHash String
@@ -92,6 +93,23 @@ model User {
   role         Role     @default(OWNER)
   createdAt    DateTime @default(now())
 
+  memberships Membership[]
+
+  @@index([tenantId])
+}
+
+// Lets one user access multiple companies (accounting-firm mode). The home tenant on
+// User is an implicit membership; this table holds the additional ones with their role.
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  role      Role     @default(ACCOUNTANT)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, tenantId])
   @@index([tenantId])
 }
 
