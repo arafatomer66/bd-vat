@@ -20,7 +20,7 @@ tenant is one VAT-registered company (one BIN).
 
 ## Features
 
-Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ planned
+Legend: ✅ shipped · 🟡 partial · ⬜ planned
 
 ### Company & tax registration
 - ✅ Multi-tenant — one tenant per VAT-registered company (BIN-isolated data)
@@ -56,31 +56,31 @@ Legend: ✅ shipped (Phase 1) · 🟡 partial / engine-ready, UI pending · ⬜ 
 - ✅ List & filter transactions by type
 - ✅ Customers/suppliers with quick-add party + counterparty BIN
 - ✅ **Mushak 6.3** tax invoice (chalan) — generated as a downloadable **PDF**
-- ⬜ Mushak 6.7 (credit note) / 6.8 (debit note) issuance UI
-- ⬜ Mushak 6.6 (VDS certificate) issuance & tracking UI
-- ⬜ Invoice numbering sequences per company
+- ✅ Mushak 6.7 (credit note) / 6.8 (debit note) issuance UI
+- ✅ Mushak 6.6 (VDS certificate) issuance & tracking UI
+- ✅ Automatic invoice numbering per company per year (`6.3-YYYY-NNNN`)
 
 ### Returns & registers
 - ✅ **Mushak 9.1** monthly return auto-compiled from the period's transactions
 - ✅ Net payable / carry-forward computed; draft return upserted per period
 - ✅ Return listing across periods
 - ✅ Previous-period rebate balance pulled forward automatically
-- 🟡 Return finalise / submit workflow (status model present)
-- ⬜ **Mushak 6.1** purchase register & **6.2** sales register exports
-- ⬜ Mushak 9.1 official-layout PDF
-- ⬜ Treasury challan (payment) reconciliation
+- ✅ Return finalise / submit workflow (DRAFT → FINALISED → SUBMITTED)
+- ✅ **Mushak 6.1** purchase register & **6.2** sales register CSV exports
+- ✅ Mushak 9.1 return PDF *(simplified layout — exact gazette layout is a later polish)*
+- ✅ Treasury challan (payment) reconciliation, recomputes net payable
 
 ### Dashboard & reporting
-- ✅ Dashboard shell with API health, rate/deadline summary cards, compiled-returns table
+- ✅ Dashboard with API health, rate/deadline summary cards, compiled-returns table
 - ✅ Transactions workspace (entry form + recent-transactions list + per-invoice PDF)
-- ⬜ Net-payable & filing-deadline alerts (return due by the **15th** of the following month)
-- ⬜ Output vs input VAT trends, period comparisons
-- ⬜ VDS receivable/payable summary
+- ✅ Net-payable & filing-deadline alerts (return due by the **15th** of the following month)
+- ✅ Output vs input VAT trend chart, last 6 months
+- ✅ VDS receivable/payable summary
 
 ### NBR compliance & integration
 - ✅ Domain modelled to the SD&VAT Act 2012 / Mushak forms
-- ⬜ `NbrAdapter` — submission-ready export package
-- ⬜ Online return submission / IVAS-style portal automation (when access exists)
+- ✅ `NbrAdapter` — submission-ready export package (JSON) behind a swappable boundary
+- ⬜ Online return submission / IVAS-style portal automation *(blocked: NBR has no public API)*
 
 ### Platform
 - ✅ npm-workspaces monorepo, shared TS config
