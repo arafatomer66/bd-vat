@@ -1,0 +1,13 @@
+:host { display: block; }
+.auto { max-width: 1040px; margin: 0 auto; padding: 2rem 1.5rem;
+  h1 { margin: 0 0 1rem; font-size: 1.6rem; } h2 { margin: 0 0 1rem; font-size: 1rem; } }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
+.card { border: 1px solid #e7e7ea; border-radius: 12px; padding: 1.25rem; background: #fff; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .75rem;
+  th, td { padding: .4rem .45rem; border-bottom: 1px solid #eee; text-align: left; } th { color: #6b7280; } .num { text-align: right; } }
+form { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+input, select { padding: .45rem .55rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: .9rem; }
+button { cursor: pointer; border: 1px solid transparent; border-radius: 8px; padding: .45rem .85rem; background: #0f5132; color: #fff; font-size: .85rem;
+  &.ghost { background: #fff; color: #0f5132; border-color: #0f5132; } }
+.hint { color: #6b7280; font-size: .8rem; } code { background: #f3f4f6; padding: .05rem .3rem; border-radius: 4px; }
+.msg { padding: .5rem .8rem; border-radius: 8px; font-size: .85rem; } .msg.err { background: #fde2e1; color: #b3261e; } .msg.ok { background: #d8f5e3; color: #0a7a3d; }

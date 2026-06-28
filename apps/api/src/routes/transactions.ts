@@ -6,6 +6,7 @@ import { requireAuth, requireWriter } from "../middleware/auth.js";
 import { audit } from "../audit.js";
 import { postTransaction, postStock } from "../ledger/accounts.js";
 import { getFiscalAdapter } from "../integrations/efd.js";
+import { getNotificationAdapter } from "../integrations/notify.js";
 import { renderMushak63 } from "../mushak/mushak63.js";
 
 export const transactionsRouter = Router();
@@ -138,6 +139,24 @@ transactionsRouter.post("/:id/fiscalize", requireWriter, async (req, res) => {
     },
   });
   res.status(201).json({ receipt, result });
+});
+
+// Email the Mushak 6.3 invoice to a recipient (logged by the notification adapter).
+transactionsRouter.post("/:id/email", requireWriter, async (req, res) => {
+  const to = String(req.body?.to ?? "").trim();
+  if (!to) return res.status(400).json({ error: "recipient 'to' required" });
+  const txn = await prisma.transaction.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+  });
+  if (!txn) return res.status(404).json({ error: "Not found" });
+
+  const result = await getNotificationAdapter().send(req.tenantId!, {
+    channel: "EMAIL",
+    recipient: to,
+    subject: `Tax Invoice ${txn.mushakNo ?? txn.id}`,
+    body: `Mushak 6.3 tax invoice ${txn.mushakNo ?? txn.id}, total Tk ${txn.grandTotal}.`,
+  });
+  res.json({ sent: true, status: result.status });
 });
 
 // Mushak 6.3 tax invoice as a downloadable PDF (SALES only).

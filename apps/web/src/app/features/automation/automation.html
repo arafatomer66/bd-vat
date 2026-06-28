@@ -1,0 +1,56 @@
+<section class="auto">
+  <h1>Automation &amp; rates</h1>
+  @if (error()) { <p class="msg err">{{ error() }}</p> }
+  @if (message()) { <p class="msg ok">{{ message() }}</p> }
+
+  <div class="grid">
+    <div class="card">
+      <h2>NBR VAT rate schedule</h2>
+      <table>
+        <thead><tr><th>Code</th><th>Description</th><th class="num">Rate</th><th>Category</th></tr></thead>
+        <tbody>
+          @for (r of rates(); track r.code) {
+            <tr><td>{{ r.code }}</td><td>{{ r.description }}</td><td class="num">{{ +r.rate * 100 }}%</td><td>{{ r.category }}</td></tr>
+          }
+        </tbody>
+      </table>
+      <p class="hint">Effective-dated; query <code>/api/rates?on=YYYY-MM-DD</code> for a past date.</p>
+    </div>
+
+    <div class="card">
+      <h2>Filing reminders</h2>
+      <button (click)="checkDeadline()">Run deadline check</button>
+      <table>
+        <thead><tr><th>When</th><th>Channel</th><th>To</th><th>Subject</th></tr></thead>
+        <tbody>
+          @for (n of notifications(); track n.id) {
+            <tr><td>{{ n.createdAt | date:'MM-dd HH:mm' }}</td><td>{{ n.channel }}</td><td>{{ n.recipient }}</td><td>{{ n.subject }}</td></tr>
+          } @empty { <tr><td colspan="4" class="hint">No notifications yet.</td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recurring invoices</h2>
+    <form (ngSubmit)="addRecurring()">
+      <input [(ngModel)]="desc" name="desc" placeholder="Item (e.g. Monthly subscription)" />
+      <input type="number" [(ngModel)]="unitPrice" name="up" placeholder="Amount" />
+      <select [(ngModel)]="rate" name="rate">
+        <option [ngValue]="0.15">15%</option><option [ngValue]="0.075">7.5%</option>
+        <option [ngValue]="0.05">5%</option><option [ngValue]="0">0%</option>
+      </select>
+      <input type="date" [(ngModel)]="nextRun" name="nr" />
+      <button type="submit">Add template</button>
+      <button type="button" class="ghost" (click)="runRecurring()">Run due now</button>
+    </form>
+    <table>
+      <thead><tr><th>Kind</th><th>Next run</th><th>Active</th></tr></thead>
+      <tbody>
+        @for (r of recurring(); track r.id) {
+          <tr><td>{{ r.kind }}</td><td>{{ r.nextRunAt | date:'yyyy-MM-dd' }}</td><td>{{ r.active ? 'yes' : 'no' }}</td></tr>
+        } @empty { <tr><td colspan="3" class="hint">No templates yet.</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</section>

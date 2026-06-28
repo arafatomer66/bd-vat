@@ -247,6 +247,14 @@ export class VatApiService {
     return this.openBlob(`${API_BASE}/api/vds/return?year=${year}&month=${month}`);
   }
 
+  // --- Phase 14: automation ---
+  rates() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/rates`, { headers: this.headers() })); }
+  notifications() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/notifications`, { headers: this.headers() })); }
+  deadlineCheck() { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/notifications/deadline-check`, {}, { headers: this.headers() })); }
+  recurringList() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/recurring`, { headers: this.headers() })); }
+  recurringCreate(body: any) { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/recurring`, body, { headers: this.headers() })); }
+  recurringRun() { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/recurring/run`, {}, { headers: this.headers() })); }
+
   // --- Phase 12: challan verify + EFD fiscalize ---
   verifyChallan(id: string) { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/returns/${id}/verify-challan`, {}, { headers: this.headers() })); }
   fiscalize(id: string) { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/transactions/${id}/fiscalize`, {}, { headers: this.headers() })); }
