@@ -1,0 +1,88 @@
+<section class="led">
+  <h1>Inventory &amp; receivables</h1>
+  @if (error()) { <p class="hint err">{{ error() }}</p> }
+
+  <div class="grid">
+    <div class="card">
+      <h2>Stock ledger</h2>
+      @if (stock().length) {
+        <table>
+          <thead><tr><th>Item</th><th class="num">In</th><th class="num">Out</th><th class="num">Balance</th></tr></thead>
+          <tbody>
+            @for (s of stock(); track s.item) {
+              <tr><td>{{ s.item }}</td><td class="num">{{ s.in }}</td><td class="num">{{ s.out }}</td>
+                <td class="num" [class.neg]="s.balance < 0">{{ s.balance }}</td></tr>
+            }
+          </tbody>
+        </table>
+      } @else { <p class="hint">No stock movements yet.</p> }
+    </div>
+
+    <div class="card">
+      <h2>Aging
+        <span class="toggle">
+          <button [class.on]="agingType()==='receivable'" (click)="switchAging('receivable')">Receivable</button>
+          <button [class.on]="agingType()==='payable'" (click)="switchAging('payable')">Payable</button>
+        </span>
+      </h2>
+      @if (aging(); as a) {
+        <div class="buckets">
+          <span>0–30 <strong>৳ {{ a.buckets.current }}</strong></span>
+          <span>31–60 <strong>৳ {{ a.buckets.d30 }}</strong></span>
+          <span>61–90 <strong>৳ {{ a.buckets.d60 }}</strong></span>
+          <span>91–120 <strong>৳ {{ a.buckets.d90 }}</strong></span>
+          <span>120+ <strong>৳ {{ a.buckets.older }}</strong></span>
+        </div>
+        <table>
+          <thead><tr><th>Party</th><th class="num">Outstanding</th><th class="num">Age (d)</th></tr></thead>
+          <tbody>
+            @for (r of a.rows; track r.party) {
+              <tr><td>{{ r.party }}</td><td class="num">৳ {{ r.outstanding }}</td><td class="num">{{ r.ageDays }}</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Record a receipt / payment</h2>
+      <form (ngSubmit)="addPayment()">
+        <select [(ngModel)]="payKind" name="kind">
+          <option value="RECEIPT">Receipt (from customer)</option>
+          <option value="PAYMENT">Payment (to supplier)</option>
+        </select>
+        <select [(ngModel)]="payParty" name="party">
+          <option value="">— party —</option>
+          @for (p of parties(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+        <input type="number" [(ngModel)]="payAmount" name="amt" placeholder="Amount" />
+        <input type="date" [(ngModel)]="payDate" name="date" />
+        <button type="submit">Record</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Party ledger</h2>
+      <div class="lookup">
+        <select [(ngModel)]="ledgerParty" name="lp">
+          <option value="">— select party —</option>
+          @for (p of parties(); track p.id) { <option [value]="p.id">{{ p.name }}</option> }
+        </select>
+        <button (click)="viewLedger()">View</button>
+      </div>
+      @if (ledger(); as l) {
+        <p class="bal">Balance: <strong>৳ {{ l.balance }}</strong></p>
+        <table>
+          <thead><tr><th>Date</th><th>Desc</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead>
+          <tbody>
+            @for (r of l.rows; track $index) {
+              <tr><td>{{ r.date | date:'yyyy-MM-dd' }}</td><td>{{ r.desc }}</td><td class="num">{{ r.amount }}</td><td class="num">{{ r.balance }}</td></tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  </div>
+</section>

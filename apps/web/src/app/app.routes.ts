@@ -6,6 +6,7 @@ import { Returns } from './features/returns/returns';
 import { MasterData } from './features/master-data/master-data';
 import { FormsPage } from './features/forms/forms-page';
 import { Accounting } from './features/accounting/accounting';
+import { Ledgers } from './features/ledgers/ledgers';
 import { Login } from './features/auth/login';
 import { authGuard } from './core/auth.guard';
 
@@ -17,6 +18,7 @@ export const routes: Routes = [
   { path: 'returns', component: Returns, canActivate: [authGuard] },
   { path: 'forms', component: FormsPage, canActivate: [authGuard] },
   { path: 'accounting', component: Accounting, canActivate: [authGuard] },
+  { path: 'ledgers', component: Ledgers, canActivate: [authGuard] },
   { path: 'master-data', component: MasterData, canActivate: [authGuard] },
   { path: '**', redirectTo: '' }
 ];

@@ -247,6 +247,12 @@ export class VatApiService {
     return this.openBlob(`${API_BASE}/api/vds/return?year=${year}&month=${month}`);
   }
 
+  // --- Phase 11: inventory, payments, aging ---
+  stock() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/inventory/stock`, { headers: this.headers() })); }
+  aging(type: 'receivable' | 'payable') { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/payments/aging?type=${type}`, { headers: this.headers() })); }
+  createPayment(body: any) { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/payments`, body, { headers: this.headers() })); }
+  partyLedger(id: string) { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/payments/party/${id}/ledger`, { headers: this.headers() })); }
+
   // --- Phase 10: accounting ---
   trialBalance() { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/ledger/trial-balance`, { headers: this.headers() })); }
   profitLoss() { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/ledger/profit-loss`, { headers: this.headers() })); }

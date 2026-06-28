@@ -4,7 +4,7 @@ import { computeInvoice, type InvoiceLineInput } from "@bd-vat/vat-engine";
 import { prisma } from "../prisma.js";
 import { requireAuth, requireWriter } from "../middleware/auth.js";
 import { audit } from "../audit.js";
-import { postTransaction } from "../ledger/accounts.js";
+import { postTransaction, postStock } from "../ledger/accounts.js";
 import { renderMushak63 } from "../mushak/mushak63.js";
 
 export const transactionsRouter = Router();
@@ -79,8 +79,9 @@ transactionsRouter.post("/", requireWriter, async (req, res) => {
     include: { lines: true },
   });
 
-  // Post the transaction to the general ledger (double-entry).
+  // Post to the general ledger (double-entry) and the stock ledger.
   await postTransaction(req.tenantId!, txn);
+  await postStock(req.tenantId!, txn, lines);
 
   audit(req.tenantId!, req.user!.userId, "transaction.create", "Transaction", txn.id, {
     kind: txn.kind,

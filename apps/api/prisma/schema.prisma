@@ -78,6 +78,42 @@ model Tenant {
   coefficients Coefficient[]
   accounts     Account[]
   journalEntries JournalEntry[]
+  stockMovements StockMovement[]
+  payments     Payment[]
+}
+
+// Stock-in / stock-out ledger (NBR expects a stock trail, esp. for manufacturers).
+// Auto-created from transaction lines: PURCHASE -> IN, SALE -> OUT.
+model StockMovement {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  item       String // item description / SKU
+  quantity   Decimal  @db.Decimal(18, 4)
+  direction  String // "IN" | "OUT"
+  sourceType String? // "transaction"
+  sourceId   String?
+  date       DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, item])
+}
+
+// Receipts (from customers) and payments (to suppliers) against a party.
+model Payment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  partyId   String?
+  party     Party?   @relation(fields: [partyId], references: [id])
+  kind      String // "RECEIPT" | "PAYMENT"
+  amount    Decimal  @db.Decimal(18, 2)
+  method    String? // cash / bank / mobile
+  memo      String?
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, partyId])
 }
 
 // Double-entry chart of accounts.
@@ -218,6 +254,7 @@ model Party {
 
   transactions Transaction[]
   adjustments  Adjustment[]
+  payments     Payment[]
 
   @@index([tenantId])
 }

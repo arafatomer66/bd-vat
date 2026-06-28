@@ -7,6 +7,8 @@ import { productsRouter } from "./routes/products.js";
 import { documentsRouter } from "./routes/documents.js";
 import { coefficientsRouter } from "./routes/coefficients.js";
 import { ledgerRouter } from "./routes/ledger.js";
+import { inventoryRouter } from "./routes/inventory.js";
+import { paymentsRouter } from "./routes/payments.js";
 import { transactionsRouter } from "./routes/transactions.js";
 import { vdsRouter } from "./routes/vds.js";
 import { adjustmentsRouter } from "./routes/adjustments.js";
@@ -27,6 +29,8 @@ export function createApp() {
   app.use("/api/documents", documentsRouter);
   app.use("/api/coefficients", coefficientsRouter);
   app.use("/api/ledger", ledgerRouter);
+  app.use("/api/inventory", inventoryRouter);
+  app.use("/api/payments", paymentsRouter);
   app.use("/api/transactions", transactionsRouter);
   app.use("/api/vds", vdsRouter);
   app.use("/api/adjustments", adjustmentsRouter);

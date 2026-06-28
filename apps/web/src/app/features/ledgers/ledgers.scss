@@ -1,0 +1,19 @@
+:host { display: block; }
+.led { max-width: 1040px; margin: 0 auto; padding: 2rem 1.5rem;
+  h1 { margin: 0 0 1rem; font-size: 1.6rem; }
+  h2 { margin: 0 0 1rem; font-size: 1rem; display: flex; align-items: center; gap: .75rem; } }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
+.card { border: 1px solid #e7e7ea; border-radius: 12px; padding: 1.25rem; background: #fff; }
+.toggle { margin-left: auto; display: flex; gap: .25rem;
+  button { border: 1px solid #0f5132; background: #fff; color: #0f5132; border-radius: 999px;
+    padding: .2rem .6rem; font-size: .75rem; cursor: pointer; &.on { background: #0f5132; color: #fff; } } }
+.buckets { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; font-size: .8rem; color: #6b7280;
+  strong { color: #18181b; margin-left: .25rem; } }
+table { width: 100%; border-collapse: collapse; font-size: .85rem;
+  th, td { padding: .4rem .45rem; border-bottom: 1px solid #eee; text-align: left; } th { color: #6b7280; }
+  .num { text-align: right; } .neg { color: #b3261e; } }
+form, .lookup { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+input, select { padding: .45rem .55rem; border: 1px solid #d1d5db; border-radius: 7px; font-size: .9rem; }
+button { cursor: pointer; border: none; border-radius: 8px; padding: .45rem .85rem; background: #0f5132; color: #fff; font-size: .85rem; }
+.bal { font-size: .9rem; strong { color: #0f5132; } }
+.hint { color: #6b7280; font-size: .85rem; } .err { color: #b3261e; }

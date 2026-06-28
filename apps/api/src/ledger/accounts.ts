@@ -76,3 +76,57 @@ export async function postTransaction(tenantId: string, txn: PostableTxn): Promi
     },
   });
 }
+
+/** Post a payment to the ledger: RECEIPT Dr Cash/Cr A/R; PAYMENT Dr A/P/Cr Cash. */
+export async function postPayment(
+  tenantId: string,
+  payment: { id: string; kind: "RECEIPT" | "PAYMENT"; amount: number; date: Date }
+): Promise<void> {
+  const acc = await ensureChartOfAccounts(tenantId);
+  const amt = payment.amount;
+  const lines =
+    payment.kind === "RECEIPT"
+      ? [
+          { accountId: acc["1000"]!, debit: amt, credit: 0 },
+          { accountId: acc["1100"]!, debit: 0, credit: amt },
+        ]
+      : [
+          { accountId: acc["2000"]!, debit: amt, credit: 0 },
+          { accountId: acc["1000"]!, debit: 0, credit: amt },
+        ];
+  await prisma.journalEntry.create({
+    data: {
+      tenantId,
+      date: payment.date,
+      memo: `${payment.kind} ${payment.id}`,
+      sourceType: "payment",
+      sourceId: payment.id,
+      lines: { create: lines },
+    },
+  });
+}
+
+interface StockableLine {
+  description: string;
+  quantity: number | string;
+}
+
+/** Record stock movements for a transaction's lines: PURCHASE in, SALE out. */
+export async function postStock(
+  tenantId: string,
+  txn: { id: string; kind: "SALE" | "PURCHASE"; issuedAt: Date },
+  lines: StockableLine[]
+): Promise<void> {
+  if (!lines.length) return;
+  await prisma.stockMovement.createMany({
+    data: lines.map((l) => ({
+      tenantId,
+      item: l.description,
+      quantity: Number(l.quantity),
+      direction: txn.kind === "PURCHASE" ? "IN" : "OUT",
+      sourceType: "transaction",
+      sourceId: txn.id,
+      date: txn.issuedAt,
+    })),
+  });
+}
