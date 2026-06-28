@@ -1,5 +1,7 @@
 <section class="md">
-  <h1>Master data</h1>
+  <h1>Master data
+    <button class="export" (click)="exportBackup()">⤓ Export all data (JSON)</button>
+  </h1>
   @if (error()) { <p class="msg err">{{ error() }}</p> }
   @if (message()) { <p class="msg ok">{{ message() }}</p> }
 

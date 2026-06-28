@@ -12,6 +12,8 @@ import { paymentsRouter } from "./routes/payments.js";
 import { ratesRouter } from "./routes/rates.js";
 import { notificationsRouter } from "./routes/notifications.js";
 import { recurringRouter } from "./routes/recurring.js";
+import { integrationsRouter } from "./routes/integrations.js";
+import { exportRouter } from "./routes/export.js";
 import { transactionsRouter } from "./routes/transactions.js";
 import { vdsRouter } from "./routes/vds.js";
 import { adjustmentsRouter } from "./routes/adjustments.js";
@@ -37,6 +39,8 @@ export function createApp() {
   app.use("/api/rates", ratesRouter);
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/recurring", recurringRouter);
+  app.use("/api/integrations", integrationsRouter);
+  app.use("/api/export", exportRouter);
   app.use("/api/transactions", transactionsRouter);
   app.use("/api/vds", vdsRouter);
   app.use("/api/adjustments", adjustmentsRouter);

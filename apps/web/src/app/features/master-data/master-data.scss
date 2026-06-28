@@ -4,7 +4,9 @@
   max-width: 1040px;
   margin: 0 auto;
   padding: 2rem 1.5rem;
-  h1 { margin: 0 0 1rem; font-size: 1.6rem; }
+  h1 { margin: 0 0 1rem; font-size: 1.6rem; display: flex; align-items: center; justify-content: space-between; }
+  .export { font-size: .8rem; padding: .4rem .8rem; border: 1px solid #0f5132; background: #fff;
+    color: #0f5132; border-radius: 8px; cursor: pointer; }
   h2 { margin: 0 0 1rem; font-size: 1rem; }
 }
 

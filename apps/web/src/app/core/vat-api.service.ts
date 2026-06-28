@@ -247,6 +247,17 @@ export class VatApiService {
     return this.openBlob(`${API_BASE}/api/vds/return?year=${year}&month=${month}`);
   }
 
+  // --- Phase 15: data export ---
+  async exportBackup() {
+    const blob = await firstValueFrom(
+      this.http.get(`${API_BASE}/api/export/tenant`, { headers: this.headers(), responseType: 'blob' })
+    );
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bd-vat-backup.json';
+    a.click();
+  }
+
   // --- Phase 14: automation ---
   rates() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/rates`, { headers: this.headers() })); }
   notifications() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/notifications`, { headers: this.headers() })); }

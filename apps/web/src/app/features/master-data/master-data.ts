@@ -35,6 +35,8 @@ export class MasterData {
     }
   }
 
+  exportBackup() { void this.api.exportBackup(); }
+
   async addProduct() {
     if (!this.name) return;
     await this.api.createProduct({

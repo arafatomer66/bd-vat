@@ -39,6 +39,19 @@ Legend: ✅ shipped · 🟡 partial · ⬜ planned
 - ✅ HS code & unit of measure on products
 - ✅ Parties (customers / suppliers) with counterparty BIN for B2B input rebate
 - ✅ **CSV bulk import** of products & parties (quoted-field aware parser)
+- ✅ **NBR VAT rate schedule** (15% + truncated 1.5–10% + exempt) with effective dating
+
+### Accounting & ledgers (Phase 10–11)
+- ✅ Double-entry **chart of accounts**; transactions auto-post balanced journal entries
+- ✅ **Trial balance, Profit & Loss, Balance sheet**, general journal
+- ✅ **Stock-in/out ledger** (auto from transaction lines)
+- ✅ **Receipts & payments**, per-party running-balance ledger, AR/AP **aging**
+
+### Forms & automation (Phase 9, 14)
+- ✅ Mushak **6.4 / 6.5 / 6.10** documents, **4.3** coefficient, **2.1** registration, VDS return — all PDF
+- ✅ **Recurring invoices**, **filing-deadline email reminders**, email-invoice
+- ✅ **E-commerce order-sync** ingest (idempotent) + sample ShareDeal script
+- ✅ Tenant **data backup/export** (JSON), append-only audit log, Bengali PDFs + EN/BN UI
 
 ### VAT calculation engine (`packages/vat-engine`, fully unit-tested)
 - ✅ **Standard 15% VAT** on taxable supplies

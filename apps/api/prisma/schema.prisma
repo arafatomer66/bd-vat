@@ -351,6 +351,8 @@ model Transaction {
   party     Party?            @relation(fields: [partyId], references: [id])
   // Mushak 6.3 invoice number for SALEs; supplier's invoice ref for PURCHASEs
   mushakNo  String?
+  // External system reference (e.g. e-commerce order id) for idempotent ingest.
+  externalRef String?
   issuedAt  DateTime
   // Eligible for input-VAT rebate (PURCHASE only, when conditions are met)
   rebateEligible Boolean      @default(false)
@@ -364,6 +366,7 @@ model Transaction {
   vdsCerts  VdsCertificate[]
   createdAt DateTime @default(now())
 
+  @@unique([tenantId, externalRef])
   @@index([tenantId, kind, issuedAt])
 }
 
