@@ -5,6 +5,7 @@ import { prisma } from "../prisma.js";
 import { requireAuth, requireWriter } from "../middleware/auth.js";
 import { audit } from "../audit.js";
 import { postTransaction, postStock } from "../ledger/accounts.js";
+import { getFiscalAdapter } from "../integrations/efd.js";
 import { renderMushak63 } from "../mushak/mushak63.js";
 
 export const transactionsRouter = Router();
@@ -107,6 +108,36 @@ transactionsRouter.get("/:id", async (req, res) => {
   });
   if (!txn) return res.status(404).json({ error: "Not found" });
   res.json(txn);
+});
+
+// Fiscalize a sale via the EFD/SDC adapter (records a fiscal receipt; unconfigured by default).
+transactionsRouter.post("/:id/fiscalize", requireWriter, async (req, res) => {
+  const txn = await prisma.transaction.findFirst({
+    where: { id: req.params.id, tenantId: req.tenantId! },
+    include: { party: true },
+  });
+  if (!txn) return res.status(404).json({ error: "Not found" });
+  if (txn.kind !== "SALE") return res.status(400).json({ error: "Only SALES can be fiscalized" });
+
+  const result = await getFiscalAdapter().issue({
+    invoiceNo: txn.mushakNo ?? txn.id,
+    buyerName: txn.party?.name,
+    buyerBin: txn.party?.bin,
+    total: txn.grandTotal.toString(),
+    vat: txn.vatTotal.toString(),
+  });
+  const receipt = await prisma.fiscalReceipt.create({
+    data: {
+      tenantId: req.tenantId!,
+      transactionId: txn.id,
+      receiptNo: result.receiptNo,
+      qrData: result.qrData,
+      deviceId: result.deviceId,
+      status: result.status,
+      message: result.message,
+    },
+  });
+  res.status(201).json({ receipt, result });
 });
 
 // Mushak 6.3 tax invoice as a downloadable PDF (SALES only).

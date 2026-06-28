@@ -95,6 +95,13 @@ export class Returns {
     this.nbrMessage.set(result.message);
   }
 
+  async verifyChallan() {
+    const r = this.selected();
+    if (!r) return;
+    const { result } = await this.api.verifyChallan(r.id);
+    this.nbrMessage.set(result.note);
+  }
+
   monthName(m: number) {
     return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1];
   }

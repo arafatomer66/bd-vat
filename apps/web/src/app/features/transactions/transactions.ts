@@ -152,4 +152,9 @@ export class Transactions {
   downloadPdf(txn: Transaction) {
     void this.api.openMushak63(txn.id);
   }
+
+  async fiscalize(txn: Transaction) {
+    const { result } = await this.api.fiscalize(txn.id);
+    this.error.set(result.message);
+  }
 }

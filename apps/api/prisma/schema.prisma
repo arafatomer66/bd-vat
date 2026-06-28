@@ -80,6 +80,25 @@ model Tenant {
   journalEntries JournalEntry[]
   stockMovements StockMovement[]
   payments     Payment[]
+  fiscalReceipts FiscalReceipt[]
+}
+
+// Record of a fiscal receipt issued via an EFD/SDC device for a sale (NBR requires
+// EFD/SDC for retail / restaurants / D2C e-commerce). Populated by the EFD adapter.
+model FiscalReceipt {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactionId String
+  receiptNo     String?
+  qrData        String?
+  deviceId      String?
+  status        String // "ISSUED" | "PENDING" | "UNCONFIGURED"
+  message       String?
+  issuedAt      DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([transactionId])
 }
 
 // Stock-in / stock-out ledger (NBR expects a stock trail, esp. for manufacturers).
@@ -371,8 +390,10 @@ model VatReturn {
   carryForward         Decimal @default(0) @db.Decimal(18, 2)
 
   // Treasury challan reconciliation (payment proof for the net payable).
-  challanNo   String?
-  challanDate DateTime?
+  challanNo       String?
+  challanDate     DateTime?
+  challanVerified Boolean   @default(false)
+  challanVerifyNote String?
 
   submittedAt DateTime?
   createdAt   DateTime  @default(now())

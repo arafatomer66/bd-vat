@@ -247,6 +247,10 @@ export class VatApiService {
     return this.openBlob(`${API_BASE}/api/vds/return?year=${year}&month=${month}`);
   }
 
+  // --- Phase 12: challan verify + EFD fiscalize ---
+  verifyChallan(id: string) { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/returns/${id}/verify-challan`, {}, { headers: this.headers() })); }
+  fiscalize(id: string) { return firstValueFrom(this.http.post<any>(`${API_BASE}/api/transactions/${id}/fiscalize`, {}, { headers: this.headers() })); }
+
   // --- Phase 11: inventory, payments, aging ---
   stock() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/inventory/stock`, { headers: this.headers() })); }
   aging(type: 'receivable' | 'payable') { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/payments/aging?type=${type}`, { headers: this.headers() })); }

@@ -7,6 +7,7 @@ import { audit } from "../audit.js";
 import { renderMushak91 } from "../mushak/mushak91.js";
 import { salesRegisterCsv, purchaseRegisterCsv } from "../mushak/registers.js";
 import { getNbrAdapter, type NbrSubmissionPackage, type RegisterRow } from "../nbr/adapter.js";
+import { getChallanAdapter } from "../integrations/challan.js";
 
 export const returnsRouter = Router();
 returnsRouter.use(requireAuth);
@@ -188,6 +189,21 @@ returnsRouter.patch("/:id/challan", requireWriter, async (req, res) => {
     },
   });
   res.json({ return: updated, computed: result });
+});
+
+// Verify the recorded a-Challan via the challan adapter (manual by default).
+returnsRouter.post("/:id/verify-challan", requireWriter, async (req, res) => {
+  const r = await prisma.vatReturn.findFirst({ where: { id: req.params.id, tenantId: req.tenantId! } });
+  if (!r) return res.status(404).json({ error: "Not found" });
+  if (!r.challanNo) return res.status(400).json({ error: "No challan recorded on this return" });
+
+  const result = await getChallanAdapter().verify(r.challanNo, Number(r.netPayable));
+  const updated = await prisma.vatReturn.update({
+    where: { id: r.id },
+    data: { challanVerified: result.verified, challanVerifyNote: result.note },
+  });
+  audit(req.tenantId!, req.user!.userId, "return.verify-challan", "VatReturn", r.id, { verified: result.verified });
+  res.json({ return: updated, result });
 });
 
 // Mushak 9.1 return as a PDF.

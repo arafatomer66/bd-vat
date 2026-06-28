@@ -66,6 +66,7 @@
           <input type="text" [(ngModel)]="challanNo" placeholder="Challan no." />
           <input type="number" [(ngModel)]="treasuryDeposits" placeholder="Deposit amount" step="0.01" />
           <button (click)="saveChallan()">Save challan</button>
+          <button class="ghost" (click)="verifyChallan()">Verify challan</button>
         </div>
       </div>
     }
