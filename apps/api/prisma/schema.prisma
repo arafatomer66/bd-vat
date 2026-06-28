@@ -66,6 +66,45 @@ model Tenant {
   vdsCerts     VdsCertificate[]
   auditLogs    AuditLog[]
   memberships  Membership[]
+  documents    MushakDocument[]
+  coefficients Coefficient[]
+}
+
+// Flexible record for the movement/record Mushak forms that share a shape:
+//   6.4  contract (job) manufacturing
+//   6.5  transfer of goods between own premises / branches
+//   6.10 record of purchases & supplies above the prescribed threshold
+model MushakDocument {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  form         String // "6.4" | "6.5" | "6.10"
+  docNo        String?
+  counterparty String?
+  fromLocation String?
+  toLocation   String?
+  reason       String?
+  issuedAt     DateTime
+  value        Decimal  @default(0) @db.Decimal(18, 2)
+  vat          Decimal  @default(0) @db.Decimal(18, 2)
+  lines        String? // JSON array of { description, quantity, unitPrice }
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId, form, issuedAt])
+}
+
+// Mushak 4.3 — input-output coefficient (price/coefficient) declaration for a
+// manufactured output: how much of each input goes into one unit of output.
+model Coefficient {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  productName String
+  outputUnit String?
+  inputs     String // JSON array of { name, quantity, unit, unitPrice }
+  declaredAt DateTime @default(now())
+
+  @@index([tenantId])
 }
 
 // Append-only audit trail of significant actions per tenant.

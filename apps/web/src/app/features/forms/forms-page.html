@@ -1,0 +1,69 @@
+<section class="forms">
+  <h1>Mushak forms</h1>
+  @if (error()) { <p class="hint err">{{ error() }}</p> }
+
+  <div class="quick card">
+    <h2>One-click documents</h2>
+    <button class="ghost" (click)="registration()">Mushak 2.1 — Registration application</button>
+    <span class="vds">
+      VDS return:
+      <input type="number" [(ngModel)]="month" min="1" max="12" class="sm" />
+      <input type="number" [(ngModel)]="year" class="md" />
+      <button class="ghost" (click)="vdsReturn()">Generate</button>
+    </span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Goods documents · 6.4 / 6.5 / 6.10</h2>
+      <form (ngSubmit)="addDocument()">
+        <select [(ngModel)]="form" name="form">
+          <option value="6.4">6.4 — Contract manufacturing</option>
+          <option value="6.5">6.5 — Transfer of goods</option>
+          <option value="6.10">6.10 — Purchase/supply record</option>
+        </select>
+        <input [(ngModel)]="docNo" name="docNo" placeholder="Doc no." />
+        <input [(ngModel)]="counterparty" name="cp" placeholder="Counterparty" />
+        <input [(ngModel)]="fromLoc" name="from" placeholder="From" />
+        <input [(ngModel)]="toLoc" name="to" placeholder="To" />
+        <input type="date" [(ngModel)]="docDate" name="date" />
+        <input [(ngModel)]="lineDesc" name="desc" placeholder="Item description" />
+        <input type="number" [(ngModel)]="value" name="value" placeholder="Value" />
+        <input type="number" [(ngModel)]="vat" name="vat" placeholder="VAT" />
+        <button type="submit">Add document</button>
+      </form>
+      @if (documents().length) {
+        <table>
+          <thead><tr><th>Form</th><th>No.</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+            @for (d of documents(); track d.id) {
+              <tr><td>{{ d.form }}</td><td>{{ d.docNo || '—' }}</td><td>{{ d.issuedAt | date:'yyyy-MM-dd' }}</td>
+                <td><button class="ghost sm" (click)="docPdf(d.id)">PDF</button></td></tr>
+            }
+          </tbody>
+        </table>
+      } @else { <p class="hint">No documents yet.</p> }
+    </div>
+
+    <div class="card">
+      <h2>Input-output coefficient · 4.3</h2>
+      <form (ngSubmit)="addCoefficient()">
+        <input [(ngModel)]="productName" name="prod" placeholder="Output product" />
+        <input [(ngModel)]="inputName" name="in" placeholder="Input name" />
+        <input [(ngModel)]="inputQty" name="qty" placeholder="Qty per unit" />
+        <button type="submit">Add coefficient</button>
+      </form>
+      @if (coefficients().length) {
+        <table>
+          <thead><tr><th>Product</th><th>Declared</th><th></th></tr></thead>
+          <tbody>
+            @for (c of coefficients(); track c.id) {
+              <tr><td>{{ c.productName }}</td><td>{{ c.declaredAt | date:'yyyy-MM-dd' }}</td>
+                <td><button class="ghost sm" (click)="coefPdf(c.id)">PDF</button></td></tr>
+            }
+          </tbody>
+        </table>
+      } @else { <p class="hint">No coefficients yet.</p> }
+    </div>
+  </div>
+</section>

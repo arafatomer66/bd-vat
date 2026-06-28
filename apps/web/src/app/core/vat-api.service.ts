@@ -221,6 +221,39 @@ export class VatApiService {
     );
   }
 
+  // --- Phase 9: additional Mushak forms ---
+  listDocuments() {
+    return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/documents`, { headers: this.headers() }));
+  }
+  createDocument(body: any) {
+    return firstValueFrom(this.http.post<any>(`${API_BASE}/api/documents`, body, { headers: this.headers() }));
+  }
+  openDocumentPdf(id: string) {
+    return this.openBlob(`${API_BASE}/api/documents/${id}/pdf`);
+  }
+  listCoefficients() {
+    return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/coefficients`, { headers: this.headers() }));
+  }
+  createCoefficient(body: any) {
+    return firstValueFrom(this.http.post<any>(`${API_BASE}/api/coefficients`, body, { headers: this.headers() }));
+  }
+  openCoefficientPdf(id: string) {
+    return this.openBlob(`${API_BASE}/api/coefficients/${id}/pdf`);
+  }
+  openRegistration21() {
+    return this.openBlob(`${API_BASE}/api/companies/registration-2.1`);
+  }
+  openVdsReturn(year: number, month: number) {
+    return this.openBlob(`${API_BASE}/api/vds/return?year=${year}&month=${month}`);
+  }
+
+  private async openBlob(url: string) {
+    const blob = await firstValueFrom(
+      this.http.get(url, { headers: this.headers(), responseType: 'blob' })
+    );
+    window.open(URL.createObjectURL(blob), '_blank');
+  }
+
   listReturns() {
     return firstValueFrom(
       this.http.get<VatReturn[]>(`${API_BASE}/api/returns`, { headers: this.headers() })
