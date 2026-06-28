@@ -1,0 +1,69 @@
+<section class="acc">
+  <h1>Accounting</h1>
+  @if (error()) { <p class="hint err">{{ error() }}</p> }
+
+  <div class="tabs">
+    <button [class.on]="tab()==='tb'" (click)="show('tb')">Trial balance</button>
+    <button [class.on]="tab()==='pl'" (click)="show('pl')">Profit &amp; loss</button>
+    <button [class.on]="tab()==='bs'" (click)="show('bs')">Balance sheet</button>
+    <button [class.on]="tab()==='journal'" (click)="show('journal')">Journal</button>
+  </div>
+
+  <div class="card">
+    @if (tab()==='tb' && tb(); as t) {
+      <table>
+        <thead><tr><th>Code</th><th>Account</th><th>Type</th><th class="num">Debit</th><th class="num">Credit</th></tr></thead>
+        <tbody>
+          @for (r of t.rows; track r.code) {
+            <tr><td>{{ r.code }}</td><td>{{ r.name }}</td><td>{{ r.type }}</td><td class="num">{{ r.debit }}</td><td class="num">{{ r.credit }}</td></tr>
+          }
+        </tbody>
+        <tfoot><tr><td colspan="3">Total {{ t.balanced ? '✓ balanced' : '✗ unbalanced' }}</td><td class="num">{{ t.totalDebit }}</td><td class="num">{{ t.totalCredit }}</td></tr></tfoot>
+      </table>
+    }
+
+    @if (tab()==='pl' && pl(); as p) {
+      <div class="cols">
+        <div>
+          <h3>Income</h3>
+          @for (r of p.income; track r.code) { <div class="row"><span>{{ r.name }}</span><span>৳ {{ r.amount }}</span></div> }
+          <div class="row total"><span>Total income</span><span>৳ {{ p.totalIncome }}</span></div>
+        </div>
+        <div>
+          <h3>Expense</h3>
+          @for (r of p.expense; track r.code) { <div class="row"><span>{{ r.name }}</span><span>৳ {{ r.amount }}</span></div> }
+          <div class="row total"><span>Total expense</span><span>৳ {{ p.totalExpense }}</span></div>
+        </div>
+      </div>
+      <div class="net">Net profit: <strong>৳ {{ p.netProfit }}</strong></div>
+    }
+
+    @if (tab()==='bs' && bs(); as b) {
+      <div class="cols">
+        <div>
+          <h3>Assets</h3>
+          @for (r of b.assets; track r.code) { <div class="row"><span>{{ r.name }}</span><span>৳ {{ r.amount }}</span></div> }
+          <div class="row total"><span>Total assets</span><span>৳ {{ b.totalAssets }}</span></div>
+        </div>
+        <div>
+          <h3>Liabilities &amp; equity</h3>
+          @for (r of b.liabilities; track r.code) { <div class="row"><span>{{ r.name }}</span><span>৳ {{ r.amount }}</span></div> }
+          @for (r of b.equity; track r.name) { <div class="row"><span>{{ r.name }}</span><span>৳ {{ r.amount }}</span></div> }
+          <div class="row total"><span>Total L + E</span><span>৳ {{ b.totalLiabilitiesAndEquity }}</span></div>
+        </div>
+      </div>
+      <div class="net">{{ b.balanced ? '✓ Balance sheet balances' : '✗ Out of balance' }}</div>
+    }
+
+    @if (tab()==='journal') {
+      @for (e of journal(); track e.id) {
+        <div class="entry">
+          <div class="entry__head">{{ e.date | date:'yyyy-MM-dd' }} · {{ e.memo }}</div>
+          @for (l of e.lines; track $index) {
+            <div class="row"><span>{{ l.account }}</span><span class="num">{{ +l.debit ? ('Dr ' + l.debit) : ('Cr ' + l.credit) }}</span></div>
+          }
+        </div>
+      } @empty { <p class="hint">No journal entries yet — create a transaction.</p> }
+    }
+  </div>
+</section>

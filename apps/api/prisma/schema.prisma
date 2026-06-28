@@ -44,6 +44,14 @@ enum ReturnStatus {
   SUBMITTED
 }
 
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
 model Tenant {
   id                String   @id @default(cuid())
   name              String
@@ -68,6 +76,52 @@ model Tenant {
   memberships  Membership[]
   documents    MushakDocument[]
   coefficients Coefficient[]
+  accounts     Account[]
+  journalEntries JournalEntry[]
+}
+
+// Double-entry chart of accounts.
+model Account {
+  id        String      @id @default(cuid())
+  tenantId  String
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  code      String // e.g. "1100"
+  name      String
+  type      AccountType
+  createdAt DateTime    @default(now())
+
+  lines JournalLine[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+model JournalEntry {
+  id         String        @id @default(cuid())
+  tenantId   String
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  date       DateTime
+  memo       String?
+  sourceType String? // "transaction" | "manual"
+  sourceId   String?
+  createdAt  DateTime      @default(now())
+
+  lines JournalLine[]
+
+  @@index([tenantId, date])
+}
+
+model JournalLine {
+  id        String       @id @default(cuid())
+  entryId   String
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  accountId String
+  account   Account      @relation(fields: [accountId], references: [id])
+  debit     Decimal      @default(0) @db.Decimal(18, 2)
+  credit    Decimal      @default(0) @db.Decimal(18, 2)
+
+  @@index([entryId])
+  @@index([accountId])
 }
 
 // Flexible record for the movement/record Mushak forms that share a shape:

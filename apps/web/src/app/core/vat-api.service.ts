@@ -247,6 +247,12 @@ export class VatApiService {
     return this.openBlob(`${API_BASE}/api/vds/return?year=${year}&month=${month}`);
   }
 
+  // --- Phase 10: accounting ---
+  trialBalance() { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/ledger/trial-balance`, { headers: this.headers() })); }
+  profitLoss() { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/ledger/profit-loss`, { headers: this.headers() })); }
+  balanceSheet() { return firstValueFrom(this.http.get<any>(`${API_BASE}/api/ledger/balance-sheet`, { headers: this.headers() })); }
+  journal() { return firstValueFrom(this.http.get<any[]>(`${API_BASE}/api/ledger/journal`, { headers: this.headers() })); }
+
   private async openBlob(url: string) {
     const blob = await firstValueFrom(
       this.http.get(url, { headers: this.headers(), responseType: 'blob' })
