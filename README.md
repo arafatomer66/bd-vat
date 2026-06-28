@@ -111,6 +111,10 @@ npm run dev:web                  # Angular on http://localhost:4200
 Sign in at `/login` with the seeded owner — **owner@selefe.test / Password123** — or
 create a new company from the signup form.
 
+> 🚶 New here? **[WALKTHROUGH.md](WALKTHROUGH.md)** is a complete worked example (create a
+> company → record a sale & purchase → compile a Mushak 9.1 → reconcile a challan → export),
+> with both the UI steps and copy-pasteable `curl` commands and the exact expected numbers.
+
 ## API
 All `/api/*` routes except auth require an **`Authorization: Bearer <token>`** header.
 Tenant scope is derived from the token. Writes require OWNER/ACCOUNTANT; VIEWER is read-only.
