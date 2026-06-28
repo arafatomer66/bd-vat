@@ -20,6 +20,9 @@ tenant is one VAT-registered company (one BIN).
 
 ## Features
 
+> 📋 **[FEATURES.md](FEATURES.md)** has the detailed reference — every feature with its
+> Mushak form / NBR basis, API endpoint, and where it lives in the app. Summary below.
+
 Legend: ✅ shipped · 🟡 partial · ⬜ planned
 
 ### Company & tax registration
