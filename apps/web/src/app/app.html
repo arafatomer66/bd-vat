@@ -2,16 +2,17 @@
   <header class="topbar">
     <span class="brand">bd<strong>vat</strong></span>
     <nav>
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
-      <a routerLink="/transactions" routerLinkActive="active">Transactions</a>
-      <a routerLink="/adjustments" routerLinkActive="active">VDS &amp; Notes</a>
-      <a routerLink="/returns" routerLinkActive="active">Returns</a>
-      <a routerLink="/forms" routerLinkActive="active">Forms</a>
-      <a routerLink="/accounting" routerLinkActive="active">Accounting</a>
-      <a routerLink="/ledgers" routerLinkActive="active">Ledgers</a>
-      <a routerLink="/master-data" routerLinkActive="active">Master data</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ i18n.t('dashboard') }}</a>
+      <a routerLink="/transactions" routerLinkActive="active">{{ i18n.t('transactions') }}</a>
+      <a routerLink="/adjustments" routerLinkActive="active">{{ i18n.t('vdsNotes') }}</a>
+      <a routerLink="/returns" routerLinkActive="active">{{ i18n.t('returns') }}</a>
+      <a routerLink="/forms" routerLinkActive="active">{{ i18n.t('forms') }}</a>
+      <a routerLink="/accounting" routerLinkActive="active">{{ i18n.t('accounting') }}</a>
+      <a routerLink="/ledgers" routerLinkActive="active">{{ i18n.t('ledgers') }}</a>
+      <a routerLink="/master-data" routerLinkActive="active">{{ i18n.t('masterData') }}</a>
     </nav>
     <div class="who">
+      <button class="lang" (click)="i18n.toggle()">{{ i18n.lang() === 'en' ? 'বাং' : 'EN' }}</button>
       @if (companies().length > 1) {
         <select [(ngModel)]="activeId" (change)="onSwitch()" class="co-switch">
           @for (c of companies(); track c.id) {
@@ -22,7 +23,7 @@
         <span class="co">{{ auth.company()?.name }}</span>
       }
       <span class="role">{{ auth.user()?.role }}</span>
-      <button (click)="logout()">Sign out</button>
+      <button (click)="logout()">{{ i18n.t('signOut') }}</button>
     </div>
   </header>
 }

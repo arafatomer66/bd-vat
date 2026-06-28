@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { registerBengali, bengaliLine } from "./fonts.js";
 
 /**
  * Mushak 9.1 — Value Added Tax Return (দাখিলপত্র) for a single tax period.
@@ -40,13 +41,15 @@ const MONTHS = [
 export function renderMushak91(data: Mushak91Data, out: NodeJS.WritableStream): void {
   const doc = new PDFDocument({ size: "A4", margin: MARGIN });
   doc.pipe(out);
+  const hasBn = registerBengali(doc);
   const width = doc.page.width - MARGIN * 2;
 
   doc.fontSize(9).fillColor("#555").text("Government of the People's Republic of Bangladesh", { align: "center" });
   doc.text("National Board of Revenue", { align: "center" });
   doc.moveDown(0.3);
   doc.fontSize(14).fillColor("#000").text("Value Added Tax Return — Mushak 9.1", { align: "center" });
-  doc.fontSize(8).fillColor("#777").text("[ Dakhilpatra · monthly VAT return ]", { align: "center" });
+  bengaliLine(doc, "মূল্য সংযোজন কর দাখিলপত্র", hasBn);
+  doc.fontSize(8).fillColor("#777").text("[ monthly VAT return ]", { align: "center" });
   doc.moveDown(0.8);
 
   doc.fontSize(9).fillColor("#000");

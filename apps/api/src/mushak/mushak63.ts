@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { registerBengali, bengaliLine } from "./fonts.js";
 
 /**
  * Mushak 6.3 — Tax Invoice (চালানপত্র) under Rule 40(1)(চ) of the VAT and SD Rules, 2016.
@@ -54,6 +55,7 @@ function pct(decimal: string): string {
 export function renderMushak63(data: Mushak63Data, out: NodeJS.WritableStream): void {
   const doc = new PDFDocument({ size: "A4", margin: PAGE_MARGIN });
   doc.pipe(out);
+  const hasBn = registerBengali(doc);
 
   const pageWidth = doc.page.width - PAGE_MARGIN * 2;
 
@@ -62,9 +64,8 @@ export function renderMushak63(data: Mushak63Data, out: NodeJS.WritableStream): 
   doc.text("National Board of Revenue", { align: "center" });
   doc.moveDown(0.3);
   doc.fontSize(14).fillColor("#000").text("Tax Invoice  —  Mushak 6.3", { align: "center" });
-  // Bengali label intentionally romanised: the built-in PDF fonts cannot render Bengali
-  // Unicode. A Bengali TTF can be embedded later to print "চালানপত্র" natively.
-  doc.fontSize(8).fillColor("#777").text("[ Chalanpatra · Rule 40(1)(chha), VAT & SD Rules 2016 ]", { align: "center" });
+  bengaliLine(doc, "কর চালানপত্র", hasBn);
+  doc.fontSize(8).fillColor("#777").text("[ Rule 40(1)(chha), VAT & SD Rules 2016 ]", { align: "center" });
   doc.moveDown(0.8);
 
   // Seller / buyer block

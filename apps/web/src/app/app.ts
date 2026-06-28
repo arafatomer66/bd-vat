@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from './core/auth.service';
+import { I18nService } from './core/i18n.service';
 
 @Component({
   selector: 'app-root',
@@ -14,7 +15,11 @@ export class App {
   protected readonly companies = signal<{ id: string; name: string; bin: string; role: string }[]>([]);
   protected activeId = '';
 
-  constructor(protected readonly auth: AuthService, private readonly router: Router) {}
+  constructor(
+    protected readonly auth: AuthService,
+    protected readonly i18n: I18nService,
+    private readonly router: Router
+  ) {}
 
   async ngOnInit() {
     await this.auth.ensureLoaded();
